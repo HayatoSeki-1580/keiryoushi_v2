@@ -696,10 +696,17 @@
       ]
     },  
   {
+      "fieldName": "JIS B 7953 大気中の窒素酸化物自動計測器",
+      "questions": [
+        { "edition": "73", "pageNum": "11" }
+      ]
+    },
+  {
       "fieldName": "JIS B 7954 大気中の浮遊粒子状物質自動計測器",
       "questions": [
         { "edition": "75", "pageNum": "25" },
-        { "edition": "74", "pageNum": "25" }
+        { "edition": "74", "pageNum": "25" },
+        { "edition": "73", "pageNum": "25" }
       ]
     },
     {
@@ -715,6 +722,12 @@
       ]
     },
     {
+      "fieldName": "JIS R 3505 ガラス製体積計",
+      "questions": [
+        { "edition": "73", "pageNum": "4" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0050 化学分析方法通則",
       "questions": [
         { "edition": "74", "pageNum": "4" }
@@ -727,6 +740,12 @@
       ]
     },
     {
+      "fieldName": "JIS K 0089 排ガス中のアクロレイン分析方法",
+      "questions": [
+        { "edition": "73", "pageNum": "16" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0093 工業用水・工場排水中のポリ黒路ビフェニル(PCB)試験",
       "questions": [
         { "edition": "74", "pageNum": "6" }
@@ -736,14 +755,16 @@
       "fieldName": "JIS K 0094 工業用水・工場排水の試料採取方法",
       "questions": [
         { "edition": "75", "pageNum": "4" },
-        { "edition": "74", "pageNum": "22" }
+        { "edition": "74", "pageNum": "22" },
+        { "edition": "73", "pageNum": "20" }
       ]
     }, 
     {
       "fieldName": "JIS K 0095 排ガス試料採取方法",
       "questions": [
         { "edition": "75", "pageNum": "13" },
-        { "edition": "74", "pageNum": "13" }
+        { "edition": "74", "pageNum": "13" },
+        { "edition": "73", "pageNum": "13" }
       ]
     }, 
     {
@@ -761,6 +782,12 @@
       ]
     },
     {
+      "fieldName": "JIS K 0103 排ガス中の硫黄酸化物分析方法",
+      "questions": [
+        { "edition": "73", "pageNum": "8" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0104 排ガス中の窒素酸化物分析方法",
       "questions": [
         { "edition": "74", "pageNum": "10" }
@@ -773,10 +800,29 @@
       ]
     }, 
     {
+      "fieldName": "JIS K 0109 排ガス中のシアン化水素分析方法",
+      "questions": [
+        { "edition": "73", "pageNum": "10" }
+      ]
+    },
+    {
+      "fieldName": "JIS K 0110 排ガス中の一酸化二窒素分析方法",
+      "questions": [
+        { "edition": "73", "pageNum": "14" }
+      ]
+    },
+    {
+      "fieldName": "JIS K 0114 ガスクロマトグラフィー通則",
+      "questions": [
+        { "edition": "73", "pageNum": "3" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0115 吸光光度分析通則",
       "questions": [
         { "edition": "75", "pageNum": "5" },
-        { "edition": "74", "pageNum": "5" }
+        { "edition": "74", "pageNum": "5" },
+        { "edition": "73", "pageNum": "5" }
       ]
     }, 
     {
@@ -789,7 +835,20 @@
       "fieldName": "JIS K 0121 原子吸光分析通則",
       "questions": [
         { "edition": "75", "pageNum": "9" },
-        { "edition": "74", "pageNum": "9" }
+        { "edition": "74", "pageNum": "9" },
+        { "edition": "73", "pageNum": "9" }
+      ]
+    },
+    {
+      "fieldName": "JIS K 0122 イオン電極測定方法通則",
+      "questions": [
+        { "edition": "73", "pageNum": "1" }
+      ]
+    },
+    {
+      "fieldName": "JIS K 0123 ガスクロマトグラフィー質量分析通則",
+      "questions": [
+        { "edition": "73", "pageNum": "23" }
       ]
     },
     {
@@ -799,9 +858,16 @@
       ]
     },
     {
+      "fieldName": "JIS K 0126 流れ分析通則",
+      "questions": [
+        { "edition": "73", "pageNum": "19" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0127 イオンクロマトグラフィー通則",
       "questions": [
-        { "edition": "75", "pageNum": "21" }
+        { "edition": "75", "pageNum": "21" },
+        { "edition": "73", "pageNum": "21" }
       ]
     }, 
     {
@@ -811,9 +877,10 @@
       ]
     }, 
     {
-      "fieldName": "JIS K 0133:2022 誘導結合プラズマ質量分析通則",
+      "fieldName": "JIS K 0133 プラズマ質量分析通則",
       "questions": [
-        { "edition": "75", "pageNum": "7" }
+        { "edition": "75", "pageNum": "7" },
+        { "edition": "73", "pageNum": "7" }
       ]
     }, 
     {
@@ -849,10 +916,17 @@
       ]
     }, 
     {
+      "fieldName": "JIS K 0312 工業用水・工場排水中のダイオキシン類の測定方法",
+      "questions": [
+        { "edition": "73", "pageNum": "6" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0450 工業用水・工場排水中の試験方法",
       "questions": [
         { "edition": "75", "pageNum": "6" },
-        { "edition": "74", "pageNum": "24" }
+        { "edition": "74", "pageNum": "24" },
+        { "edition": "73", "pageNum": "24" }
       ]
     },  
     {
@@ -885,7 +959,13 @@
         { "edition": "74", "pageNum": "12" },
         { "edition": "74", "pageNum": "15" },
         { "edition": "74", "pageNum": "17" },
-        { "edition": "74", "pageNum": "18" }
+        { "edition": "74", "pageNum": "18" },
+        { "edition": "73", "pageNum": "2" },
+        { "edition": "73", "pageNum": "12" },
+        { "edition": "73", "pageNum": "15" },
+        { "edition": "73", "pageNum": "17" },
+        { "edition": "73", "pageNum": "18" },
+        { "edition": "73", "pageNum": "22" }
       ]
     }
   ]
