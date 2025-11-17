@@ -646,4 +646,90 @@
       ]
     }
   ]
+"kanka": [
+  {
+      "fieldName": "環境基本法",
+      "questions": [
+        { "edition": "75", "pageNum": "1" },
+        { "edition": "74", "pageNum": "1" },
+        { "edition": "73", "pageNum": "1" },
+        { "edition": "72", "pageNum": "1" },
+        { "edition": "71", "pageNum": "1" }
+      ]
+    },  
+  {
+      "fieldName": "大気汚染防止法",
+      "questions": [
+        { "edition": "75", "pageNum": "2" },
+        { "edition": "75", "pageNum": "3" },
+        { "edition": "74", "pageNum": "2" },
+        { "edition": "74", "pageNum": "3" },
+        { "edition": "73", "pageNum": "2" },
+        { "edition": "73", "pageNum": "3" },
+        { "edition": "72", "pageNum": "2" },
+        { "edition": "72", "pageNum": "3" },
+        { "edition": "71", "pageNum": "2" },
+        { "edition": "71", "pageNum": "3" }
+      ]
+    },
+  {
+      "fieldName": "水質汚濁防止法",
+      "questions": [
+        { "edition": "75", "pageNum": "4" },
+        { "edition": "75", "pageNum": "5" },
+        { "edition": "74", "pageNum": "4" },
+        { "edition": "74", "pageNum": "5" },
+        { "edition": "73", "pageNum": "4" },
+        { "edition": "73", "pageNum": "5" },
+        { "edition": "72", "pageNum": "4" },
+        { "edition": "72", "pageNum": "5" },
+        { "edition": "71", "pageNum": "4" },
+        { "edition": "71", "pageNum": "5" }
+      ]
+    }
+  ],
+  "kannou": [
+  {
+      "fieldName": "JIS Z 8802 pH 測定方法",
+      "questions": [
+        { "edition": "75", "pageNum": "1" }
+      ]
+    },  
+  {
+      "fieldName": "JIS K 0094 工業用水・工場排水の試料採取方法",
+      "questions": [
+        { "edition": "75", "pageNum": "4" }
+      ]
+    }, 
+    {
+      "fieldName": "JIS K 0115 吸光光度分析通則",
+      "questions": [
+        { "edition": "75", "pageNum": "5" }
+      ]
+    }, 
+    {
+      "fieldName": "JIS K 0450-30-10 工業用水・工場排水中のフタル酸エステル類試験方法",
+      "questions": [
+        { "edition": "75", "pageNum": "6" }
+      ]
+    }, 
+    {
+      "fieldName": "JIS K 0133:2022 誘導結合プラズマ質量分析通則",
+      "questions": [
+        { "edition": "75", "pageNum": "7" }
+      ]
+    }, 
+    {
+      "fieldName": "JIS K 0105 排ガス中のふっ素化合物分析方法",
+      "questions": [
+        { "edition": "75", "pageNum": "8" }
+      ]
+    }, 
+    {
+      "fieldName": "JIS K 0121 原子吸光分析通則",
+      "questions": [
+        { "edition": "75", "pageNum": "9" }
+      ]
+    }
+  ]
 }
