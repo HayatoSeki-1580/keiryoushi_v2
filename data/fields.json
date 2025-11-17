@@ -708,13 +708,15 @@
         { "edition": "75", "pageNum": "25" },
         { "edition": "74", "pageNum": "25" },
         { "edition": "73", "pageNum": "25" },
-        { "edition": "72", "pageNum": "25" }
+        { "edition": "72", "pageNum": "25" },
+        { "edition": "71", "pageNum": "25" }
       ]
     },
     {
       "fieldName": "JIS B 7982 排ガス中の窒素酸化物自動計測システム及び自動計測器",
       "questions": [
-        { "edition": "74", "pageNum": "11" }
+        { "edition": "74", "pageNum": "11" },
+        { "edition": "71", "pageNum": "11" }
       ]
     },
     {
@@ -787,7 +789,8 @@
         { "edition": "75", "pageNum": "13" },
         { "edition": "74", "pageNum": "13" },
         { "edition": "73", "pageNum": "13" },
-        { "edition": "72", "pageNum": "13" }
+        { "edition": "72", "pageNum": "13" },
+        { "edition": "71", "pageNum": "13" }
       ]
     }, 
     {
@@ -798,6 +801,12 @@
       ]
     }, 
     {
+      "fieldName": "JIS K 0099 排ガス中のアンモニア分析方法",
+      "questions": [
+        { "edition": "71", "pageNum": "10" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0102 工場排水試験方法",
       "questions": [
         { "edition": "75", "pageNum": "20" },
@@ -806,7 +815,10 @@
         { "edition": "72", "pageNum": "17" },
         { "edition": "72", "pageNum": "20" },
         { "edition": "72", "pageNum": "21" },
-        { "edition": "72", "pageNum": "22" }
+        { "edition": "72", "pageNum": "22" },
+        { "edition": "71", "pageNum": "4" },
+        { "edition": "71", "pageNum": "20" },
+        { "edition": "71", "pageNum": "22" }
       ]
     },
     {
@@ -818,7 +830,8 @@
     {
       "fieldName": "JIS K 0104 排ガス中の窒素酸化物分析方法",
       "questions": [
-        { "edition": "74", "pageNum": "10" }
+        { "edition": "74", "pageNum": "10" },
+        { "edition": "71", "pageNum": "8" }
       ]
     },
     {
@@ -843,7 +856,8 @@
     {
       "fieldName": "JIS K 0114 ガスクロマトグラフィー通則",
       "questions": [
-        { "edition": "73", "pageNum": "3" }
+        { "edition": "73", "pageNum": "3" },
+        { "edition": "71", "pageNum": "3" }
       ]
     },
     {
@@ -867,7 +881,8 @@
         { "edition": "75", "pageNum": "9" },
         { "edition": "74", "pageNum": "9" },
         { "edition": "73", "pageNum": "9" },
-        { "edition": "72", "pageNum": "9" }
+        { "edition": "72", "pageNum": "9" },
+        { "edition": "71", "pageNum": "9" }
       ]
     },
     {
@@ -885,20 +900,23 @@
     {
       "fieldName": "JIS K 0124 高速液体クロマトグラフィー通則",
       "questions": [
-        { "edition": "74", "pageNum": "21" }
+        { "edition": "74", "pageNum": "21" },
+        { "edition": "71", "pageNum": "21" }
       ]
     },
     {
       "fieldName": "JIS K 0125 用水・排水中の揮発性有機化合物試験方法",
       "questions": [
-        { "edition": "72", "pageNum": "24" }
+        { "edition": "72", "pageNum": "24" },
+        { "edition": "71", "pageNum": "24" }
       ]
     },
     {
       "fieldName": "JIS K 0126 流れ分析通則",
       "questions": [
         { "edition": "73", "pageNum": "19" },
-        { "edition": "72", "pageNum": "19" }
+        { "edition": "72", "pageNum": "19" },
+        { "edition": "71", "pageNum": "19" }
       ]
     },
     {
@@ -954,6 +972,12 @@
       ]
     }, 
     {
+      "fieldName": "JIS K 0306 空気中の揮発性有機化合物の検知管による測定方法",
+      "questions": [
+        { "edition": "71", "pageNum": "14" }
+      ]
+    },
+    {
       "fieldName": "JIS K 0312 工業用水・工場排水中のダイオキシン類の測定方法",
       "questions": [
         { "edition": "73", "pageNum": "6" },
@@ -965,33 +989,19 @@
       "questions": [
         { "edition": "75", "pageNum": "6" },
         { "edition": "74", "pageNum": "24" },
-        { "edition": "73", "pageNum": "24" }
+        { "edition": "73", "pageNum": "24" },
+        { "edition": "71", "pageNum": "6" }
       ]
     },  
-    {
-      "fieldName": "濃度計の校正",
-      "questions": [
-        { "edition": "75", "pageNum": "15" }
-      ]
-    },
-    {
-      "fieldName": "悪臭防止法",
-      "questions": [
-        { "edition": "75", "pageNum": "14" }
-      ]
-    },
-    {
-      "fieldName": "河川・、湖沼マイクロプラスチック調査ガイドライン",
-      "questions": [
-        { "edition": "75", "pageNum": "17" }
-      ]
-    },
     {
       "fieldName": "その他",
       "questions": [
         { "edition": "75", "pageNum": "2" },
         { "edition": "75", "pageNum": "3" },
         { "edition": "75", "pageNum": "12" },
+        { "edition": "75", "pageNum": "14" },
+        { "edition": "75", "pageNum": "15" },
+        { "edition": "75", "pageNum": "17" },
         { "edition": "75", "pageNum": "18" },
         { "edition": "74", "pageNum": "1" },
         { "edition": "74", "pageNum": "2" },
@@ -1010,7 +1020,17 @@
         { "edition": "72", "pageNum": "7" },
         { "edition": "72", "pageNum": "12" },
         { "edition": "72", "pageNum": "18" },
-        { "edition": "72", "pageNum": "23" }
+        { "edition": "72", "pageNum": "23" },
+        { "edition": "71", "pageNum": "1" },
+        { "edition": "71", "pageNum": "2" },
+        { "edition": "71", "pageNum": "5" },
+        { "edition": "71", "pageNum": "7" },
+        { "edition": "71", "pageNum": "12" },
+        { "edition": "71", "pageNum": "15" },
+        { "edition": "71", "pageNum": "16" },
+        { "edition": "71", "pageNum": "17" },
+        { "edition": "71", "pageNum": "18" },
+        { "edition": "71", "pageNum": "23" }
       ]
     }
   ]
