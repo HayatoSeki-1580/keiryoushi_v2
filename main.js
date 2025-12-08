@@ -360,38 +360,43 @@ function checkAnswer(selectedChoice) {
 
 /** 【追加】解説を表示する関数 */
 function showExplanationModal() {
-    // --- デバッグ用ログ追加 ---
-    console.log("解説表示処理開始");
-    console.log("現在のデータ:", currentExplanations);
-    
-    // 現在の問題情報を取得
-    let subjectKey, pageNum;
-    
+    // 1. 変数をここで確実に宣言・初期化します（これで ReferenceError を防ぎます）
+    let subjectKey = "";
+    let pageNum = "";
+    let edition = "";
+
+    // 2. 現在のモード（分野別 or 回数別）に合わせて値をセットします
     if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
-        // 分野別モード
+        // --- 分野別モードの場合 ---
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = subjectSelectField ? subjectSelectField.value : '';
         pageNum = q.pageNum;
-        console.log("モード: 分野別", "科目:", subjectKey, "問:", pageNum);
+        edition = q.edition; // ここで値をセット
     } else {
-        // 回数別モード
+        // --- 回数別モードの場合 ---
         subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
         pageNum = currentPageNum;
-        console.log("モード: 回数別", "科目:", subjectKey, "問:", pageNum);
+        edition = editionSelect ? editionSelect.value : ''; // ここで値をセット
     }
 
-    // データ取得
+    // デバッグ用ログ（値が正しく取れているか確認できます）
+    console.log(`解説表示: 第${edition}回 ${subjectKey} 問${pageNum}`);
+
+    // 3. データ取得
+    // 解説データがない場合に備えて安全にアクセス (?.) します
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
+    
+    // 表示するテキストを決定（データがなければメッセージを表示）
     const displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
     
-    // Marked.js で Markdown を HTML に変換
+    // 4. Marked.js で Markdown を HTML に変換
     if (typeof marked !== 'undefined') {
         explanationBody.innerHTML = marked.parse(displayText);
     } else {
         explanationBody.textContent = displayText;
     }
 
-    // KaTeX で数式をレンダリング
+    // 5. KaTeX で数式をレンダリング
     if (typeof renderMathInElement !== 'undefined') {
         renderMathInElement(explanationBody, {
             delimiters: [
@@ -400,6 +405,12 @@ function showExplanationModal() {
             ]
         });
     }
+
+    // 6. タイトルを設定してモーダルを表示
+    // ここで edition 変数を使います
+    explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
+    explanationModal.style.display = 'block';
+}
 
     explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
     explanationModal.style.display = 'block';
