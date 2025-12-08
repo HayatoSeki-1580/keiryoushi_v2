@@ -358,56 +358,72 @@ function checkAnswer(selectedChoice) {
     if(explanationBtn) explanationBtn.classList.remove('hidden');
 }
 
-/** 【追加】解説を表示する関数 */
+/** 【修正・強化版】解説を表示する関数 */
 function showExplanationModal() {
-    // 1. ここで変数を宣言・初期化します（これで ReferenceError を防ぎます）
+    // 1. 変数宣言
     let subjectKey = "";
     let pageNum = "";
     let edition = "";
 
-    // 2. 現在のモード（分野別 or 回数別）に合わせて値をセットします
-    if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
-        // --- 分野別モードの場合 ---
-        const q = currentFieldQuestions[currentFieldIndex];
+    // 2. モード判定
+    const context = currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]
+        ? { q: currentFieldQuestions[currentFieldIndex], mode: 'field' }
+        : { q: null, mode: 'edition' };
+
+    if (context.mode === 'field') {
+        const q = context.q;
         subjectKey = subjectSelectField ? subjectSelectField.value : '';
         pageNum = q.pageNum;
-        edition = q.edition; 
+        edition = q.edition;
     } else {
-        // --- 回数別モードの場合 ---
         subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
         pageNum = currentPageNum;
-        edition = editionSelect ? editionSelect.value : ''; 
+        edition = editionSelect ? editionSelect.value : '';
     }
 
-    // デバッグ用ログ
     console.log(`解説表示: 第${edition}回 ${subjectKey} 問${pageNum}`);
 
     // 3. データ取得
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
-    const displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
-    
-    // 4. Marked.js で Markdown を HTML に変換
+    let displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
+
+    // 4. 【重要】数式保護処理
+    // Markdown変換前に、$$...$$ や $...$ の数式部分を一時的な文字に置き換えて保護します
+    const mathBlocks = [];
+    displayText = displayText.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g, (match) => {
+        mathBlocks.push(match);
+        return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+    });
+
+    // 5. Marked.js で Markdown を HTML に変換
     if (typeof marked !== 'undefined') {
         explanationBody.innerHTML = marked.parse(displayText);
     } else {
         explanationBody.textContent = displayText;
     }
 
-    // 5. KaTeX で数式をレンダリング
+    // 6. 【重要】数式の復元
+    // 保護していた数式を元の場所に戻します
+    explanationBody.innerHTML = explanationBody.innerHTML.replace(/__MATH_BLOCK_(\d+)__/g, (match, index) => {
+        return mathBlocks[index];
+    });
+
+    // 7. KaTeX で数式をレンダリング
     if (typeof renderMathInElement !== 'undefined') {
         renderMathInElement(explanationBody, {
             delimiters: [
                 {left: "$$", right: "$$", display: true},
                 {left: "$", right: "$", display: false}
-            ]
+            ],
+            // エラーが出てもそのまま表示する設定
+            throwOnError: false
         });
     }
 
-    // 6. タイトルを設定してモーダルを表示
+    // 8. タイトル設定と表示
     explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
     explanationModal.style.display = 'block';
 }
-
 
 /** ナビボタン更新 */
 function updateNavButtons() {
