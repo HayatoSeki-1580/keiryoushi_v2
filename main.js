@@ -97,6 +97,7 @@ async function loadAnswersForEdition(edition) {
 
 /** 【追加】解説JSON読込 */
 async function loadExplanations(edition) {
+    console.log("解説読み込み開始:", edition); // ★これを追加して確認
     const url = `./data/explanations/${edition}.json`;
     currentExplanations = {}; // リセット
     try {
