@@ -358,7 +358,7 @@ function checkAnswer(selectedChoice) {
     if(explanationBtn) explanationBtn.classList.remove('hidden');
 }
 
-/** 【修正・強化版】解説を表示する関数 */
+/** 【修正・不具合解消版】解説を表示する関数 */
 function showExplanationModal() {
     // 1. 変数宣言
     let subjectKey = "";
@@ -387,12 +387,13 @@ function showExplanationModal() {
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
     let displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
 
-    // 4. 【重要】数式保護処理
-    // Markdown変換前に、$$...$$ や $...$ の数式部分を一時的な文字に置き換えて保護します
+    // 4. 【重要】数式保護処理（修正ポイント）
+    // アンダースコア(_)を使わず、Markdown記法と被らない英数字のみのIDを使います
     const mathBlocks = [];
     displayText = displayText.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g, (match) => {
         mathBlocks.push(match);
-        return `__MATH_BLOCK_${mathBlocks.length - 1}__`;
+        // "MATHBLOCK" + 数字 + "END" という形式なら太字変換されません
+        return `MATHBLOCK${mathBlocks.length - 1}END`;
     });
 
     // 5. Marked.js で Markdown を HTML に変換
@@ -402,9 +403,9 @@ function showExplanationModal() {
         explanationBody.textContent = displayText;
     }
 
-    // 6. 【重要】数式の復元
-    // 保護していた数式を元の場所に戻します
-    explanationBody.innerHTML = explanationBody.innerHTML.replace(/__MATH_BLOCK_(\d+)__/g, (match, index) => {
+    // 6. 【重要】数式の復元（修正ポイント）
+    // 保護していたIDを探して、元の数式に戻します
+    explanationBody.innerHTML = explanationBody.innerHTML.replace(/MATHBLOCK(\d+)END/g, (match, index) => {
         return mathBlocks[index];
     });
 
@@ -415,7 +416,6 @@ function showExplanationModal() {
                 {left: "$$", right: "$$", display: true},
                 {left: "$", right: "$", display: false}
             ],
-            // エラーが出てもそのまま表示する設定
             throwOnError: false
         });
     }
