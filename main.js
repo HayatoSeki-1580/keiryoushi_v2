@@ -360,7 +360,7 @@ function checkAnswer(selectedChoice) {
 
 /** 【追加】解説を表示する関数 */
 function showExplanationModal() {
-    // 1. 変数をここで確実に宣言・初期化します（これで ReferenceError を防ぎます）
+    // 1. ここで変数を宣言・初期化します（これで ReferenceError を防ぎます）
     let subjectKey = "";
     let pageNum = "";
     let edition = "";
@@ -371,22 +371,19 @@ function showExplanationModal() {
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = subjectSelectField ? subjectSelectField.value : '';
         pageNum = q.pageNum;
-        edition = q.edition; // ここで値をセット
+        edition = q.edition; 
     } else {
         // --- 回数別モードの場合 ---
         subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
         pageNum = currentPageNum;
-        edition = editionSelect ? editionSelect.value : ''; // ここで値をセット
+        edition = editionSelect ? editionSelect.value : ''; 
     }
 
-    // デバッグ用ログ（値が正しく取れているか確認できます）
+    // デバッグ用ログ
     console.log(`解説表示: 第${edition}回 ${subjectKey} 問${pageNum}`);
 
     // 3. データ取得
-    // 解説データがない場合に備えて安全にアクセス (?.) します
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
-    
-    // 表示するテキストを決定（データがなければメッセージを表示）
     const displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
     
     // 4. Marked.js で Markdown を HTML に変換
@@ -407,11 +404,6 @@ function showExplanationModal() {
     }
 
     // 6. タイトルを設定してモーダルを表示
-    // ここで edition 変数を使います
-    explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
-    explanationModal.style.display = 'block';
-}
-
     explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
     explanationModal.style.display = 'block';
 }
