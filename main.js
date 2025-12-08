@@ -359,18 +359,24 @@ function checkAnswer(selectedChoice) {
 
 /** 【追加】解説を表示する関数 */
 function showExplanationModal() {
+    // --- デバッグ用ログ追加 ---
+    console.log("解説表示処理開始");
+    console.log("現在のデータ:", currentExplanations);
+    
     // 現在の問題情報を取得
-    let subjectKey, pageNum, edition;
+    let subjectKey, pageNum;
     
     if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
+        // 分野別モード
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = subjectSelectField ? subjectSelectField.value : '';
         pageNum = q.pageNum;
-        edition = q.edition;
+        console.log("モード: 分野別", "科目:", subjectKey, "問:", pageNum);
     } else {
+        // 回数別モード
         subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
         pageNum = currentPageNum;
-        edition = editionSelect ? editionSelect.value : '';
+        console.log("モード: 回数別", "科目:", subjectKey, "問:", pageNum);
     }
 
     // データ取得
