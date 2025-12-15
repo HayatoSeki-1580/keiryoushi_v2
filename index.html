@@ -2,24 +2,86 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- 【重要】スマートフォン表示のための設定 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>過去問演習ブラウザ</title>
     <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* 解説ボタン（初期は非表示） */
+        .explanation-btn {
+            background-color: #28a745; /* 緑色 */
+            color: white;
+            margin-left: 10px;
+        }
+        .explanation-btn:hover { background-color: #218838; }
+
+        /* モーダル全体のスタイル */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); /* 背景を暗く */
+        }
+
+        /* モーダルコンテンツ */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        /* 閉じるボタン */
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 解説本文のスタイル */
+        #explanation-body {
+            line-height: 1.6;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #explanation-body h3 { border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        #explanation-body code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+        #explanation-body blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 10px; color: #555; }
+    </style>
 </head>
 <body>
     <h1>過去問演習ブラウザ</h1>
 
-    <!-- メインの演習画面全体をラップ -->
     <div id="exercise-view">
 
-        <!-- モード選択タブ -->
         <div class="mode-tabs">
             <button id="tab-by-edition" class="tab-btn active">回数別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
         </div>
 
-        <!-- 回数別パネル -->
         <div id="panel-by-edition" class="control-panel">
             <div class="top-row">
                 <div class="select-group">
@@ -56,11 +118,11 @@
                     正答数: <span class="score-correct">0</span>
                 </div>
                 <button id="show-results-btn-edition" class="results-btn">成績を見る</button>
+                <button id="btn-explanation-edition" class="explanation-btn hidden">解説を見る</button>
                 <div id="result-area-edition" class="result-area"></div>
             </div>
         </div>
 
-        <!-- 分野別パネル -->
         <div id="panel-by-field" class="control-panel hidden">
              <div class="top-row">
                  <div class="select-group">
@@ -77,13 +139,10 @@
                      </select>
                  </div>
                  <div class="select-group">
-                     <label>分野:</label> <!-- ラベルのfor属性は無し -->
-                     <!-- 【変更】カスタムプルダウンの骨格に戻す -->
+                     <label>分野:</label> 
                      <div id="field-select-custom" class="custom-select">
                          <div class="select-selected">分野を選択...</div>
-                         <div class="select-items select-hide">
-                             <!-- ここにJSで選択肢が生成されます -->
-                         </div>
+                         <div class="select-items select-hide"></div>
                      </div>
                  </div>
                  <button id="go-btn-field">表示</button>
@@ -103,11 +162,11 @@
                     正答数: <span class="score-correct">0</span>
                 </div>
                 <button id="show-results-btn-field" class="results-btn">成績を見る</button>
+                <button id="btn-explanation-field" class="explanation-btn hidden">解説を見る</button>
                 <div id="result-area-field" class="result-area"></div>
             </div>
         </div>
 
-        <!-- 共通部分 -->
         <div class="navigation">
             <button id="prev-btn">◀ 前の問題</button>
             <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
@@ -130,9 +189,8 @@
             <canvas id="pdf-canvas"></canvas>
         </div>
 
-    </div> <!-- exercise-view 終了 -->
+    </div> 
 
-    <!-- 成績表示パネル (最初は非表示) -->
     <div id="results-panel" class="hidden">
         <h2>成績一覧</h2>
         <div id="results-summary"></div>
@@ -140,7 +198,15 @@
         <button id="back-to-exercise-btn">演習に戻る</button>
     </div>
 
+    <div id="explanation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 id="explanation-title">解説</h2>
+            <div id="explanation-body">
+                </div>
+        </div>
+    </div>
+
     <script src="main.js" type="module"></script>
 </body>
 </html>
-
