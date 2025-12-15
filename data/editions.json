@@ -1,5 +1,6 @@
 {
   "available": [
+    { "value": "76", "displayText": "第76回(令和７年)" },
     { "value": "75", "displayText": "第75回(令和６年)" },
     { "value": "74", "displayText": "第74回(令和５年)" },
     { "value": "73", "displayText": "第73回(令和４年)" },
