@@ -176,10 +176,21 @@ function shuffleArray(array) {
 /** タイマー更新 */
 function updateTimer() {
     if (!examTimerSpan) return;
-    const now = Date.now();
-    const diff = Math.floor((now - examStartTime + examElapsedTime) / 1000);
-    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
-    const seconds = (diff % 60).toString().padStart(2, '0');
+    
+    let totalSeconds = 0;
+    
+    if (isTimerRunning) {
+        // 動いている時: 過去の蓄積 + 今回の経過時間
+        const now = Date.now();
+        const currentSession = now - examStartTime;
+        totalSeconds = Math.floor((examElapsedTime + currentSession) / 1000);
+    } else {
+        // 止まっている時: 蓄積時間のみ
+        totalSeconds = Math.floor(examElapsedTime / 1000);
+    }
+
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
     examTimerSpan.textContent = `${minutes}:${seconds}`;
 }
 
@@ -188,35 +199,41 @@ function startTimer() {
     if (isTimerRunning) return; 
     examStartTime = Date.now();
     if(examTimerSpan) examTimerSpan.classList.remove('hidden');
-    updateTimer(); 
-    examTimerInterval = setInterval(updateTimer, 1000);
     isTimerRunning = true;
+    updateTimer(); // 即時更新
+    examTimerInterval = setInterval(updateTimer, 1000);
 }
 
 /** タイマー一時停止 */
 function stopTimer() {
     if (!isTimerRunning) return;
+    
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
+    // 時間を確定して蓄積
     examElapsedTime += Date.now() - examStartTime;
     isTimerRunning = false;
-    updateTimer();
+    updateTimer(); // 最終状態を表示
 }
 
 /** タイマーリセット */
 function resetTimer() {
-    stopTimer();
+    if (examTimerInterval) {
+        clearInterval(examTimerInterval);
+        examTimerInterval = null;
+    }
+    isTimerRunning = false;
     examElapsedTime = 0;
     if (examTimerSpan) examTimerSpan.textContent = "00:00";
 }
 
 /** 最終時間取得文字列 */
 function getFinalTimeStr() {
-    const diff = Math.floor(examElapsedTime / 1000);
-    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
-    const seconds = (diff % 60).toString().padStart(2, '0');
+    const totalSeconds = Math.floor(examElapsedTime / 1000);
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
 }
 
@@ -330,6 +347,8 @@ async function renderPageInternal(pdfPageNum) {
         context.clearRect(0, 0, canvas.width, canvas.height);
         await pageObj.render({ canvasContext: context, viewport }).promise;
 
+        // 問題描画が完了したタイミング
+        // 問題情報を更新
         if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
             const question = currentFieldQuestions[currentFieldIndex];
             const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
@@ -358,7 +377,7 @@ async function renderPageInternal(pdfPageNum) {
             updateNavButtons();
             updateDifficultyDisplay(currentQuestionId);
 
-            // 履歴反映
+            // 履歴確認
             const history = answerHistory[currentQuestionId];
             let activeResultArea = resultAreaEdition;
             if (activePanel === panelByField) activeResultArea = resultAreaField;
@@ -368,21 +387,33 @@ async function renderPageInternal(pdfPageNum) {
             if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
             if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
 
+            // 未解答かつ試験モードならタイマーをスタート
+            if (isExamMode && !history) {
+                startTimer();
+            }
+
             if (history && activePanel && activeResultArea) {
                 const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${history.selected}"]`);
                 const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
 
-                if (history.correct) {
-                    if(selectedButton) selectedButton.classList.add('correct-selection');
-                    activeResultArea.textContent = `正解！ 🎉`;
-                    activeResultArea.className = 'result-area correct';
+                if (isExamMode) {
+                    if (selectedButton) {
+                        selectedButton.classList.add('selected-answer-exam');
+                    }
+                    activeResultArea.textContent = '解答済み';
                 } else {
-                    if(selectedButton) selectedButton.classList.add('incorrect-selection');
-                    if(correctButton) correctButton.classList.add('correct-answer');
-                    activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
-                    activeResultArea.className = 'result-area incorrect';
+                    if (history.correct) {
+                        if(selectedButton) selectedButton.classList.add('correct-selection');
+                        activeResultArea.textContent = `正解！ 🎉`;
+                        activeResultArea.className = 'result-area correct';
+                    } else {
+                        if(selectedButton) selectedButton.classList.add('incorrect-selection');
+                        if(correctButton) correctButton.classList.add('correct-answer');
+                        activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
+                        activeResultArea.className = 'result-area incorrect';
+                    }
+                    if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
                 }
-                if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
                 
                 activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
             }
@@ -503,7 +534,7 @@ function checkAnswer(selectedChoice) {
         return;
     }
 
-    // 解答したらタイマー停止
+    // 【修正】解答したらタイマー停止
     if (isExamMode) {
         stopTimer();
     }
@@ -514,7 +545,7 @@ function checkAnswer(selectedChoice) {
     const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${selectedChoice}"]`);
     const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${correctAnswer}"]`);
 
-    // 即時正誤表示
+    // シャッフル演習も含め、全モードで即時正誤表示
     if (isCorrect) {
         correctCount++; updateScoreDisplay();
         resultArea.textContent = `正解！ 🎉`; resultArea.className = 'result-area correct';
@@ -607,9 +638,8 @@ function showResults() {
     const accuracy = totalQuestions > 0 ? ((sessionCorrectCount / totalQuestions) * 100).toFixed(1) : 0;
     resultsSummary.innerHTML = `総問題数: ${totalQuestions}問 / 解答済み: ${answeredCount}問<br>正答数: ${sessionCorrectCount}問 / 正答率: ${accuracy}%`;
 
-    // 証明書生成・画像化
+    // 証明書生成
     if (certificateContainer && !certificateContainer.classList.contains('hidden')) {
-        // テキスト更新
         if(certScoreNum) certScoreNum.textContent = sessionCorrectCount;
         if(certTimeValue) certTimeValue.textContent = finalTime;
         
@@ -627,12 +657,8 @@ function showResults() {
             certDate.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
         }
 
-        // html2canvasで画像化して表示
         if (certImageContainer) {
-            certImageContainer.innerHTML = ''; // クリア
-            // html2canvas実行前にDOMが表示されている必要がある
-            
-            // 少し待ってから実行（DOMレンダリング待ち）
+            certImageContainer.innerHTML = ''; 
             setTimeout(() => {
                 html2canvas(certificateContainer, {
                     scale: 2, 
@@ -643,11 +669,7 @@ function showResults() {
                     img.src = imgData;
                     img.style.maxWidth = '100%';
                     img.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
-                    
-                    // オリジナルDOMを隠す
                     certificateContainer.classList.add('hidden');
-                    
-                    // 画像を表示
                     certImageContainer.classList.remove('hidden');
                     certImageContainer.appendChild(img);
                 });
@@ -779,7 +801,6 @@ function setupEventListeners() {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
         correctCount = 0; updateScoreDisplay(); answerHistory = {};
         
-        // 科目チェックボックス取得
         const targetSubjects = new Set();
         shuffleSubjectCheckboxes.forEach(cb => {
             if (cb.checked) targetSubjects.add(cb.value);
@@ -789,7 +810,6 @@ function setupEventListeners() {
             alert("出題科目を少なくとも1つ選択してください。"); return;
         }
 
-        // 難易度チェックボックス取得
         const allowedDiff = new Set();
         shuffleDiffCheckboxes.forEach(cb => { if (cb.checked) allowedDiff.add(cb.value); });
 
@@ -797,7 +817,6 @@ function setupEventListeners() {
             alert("難易度を少なくとも1つ選択してください。"); return;
         }
 
-        // 全問題（fieldsData由来）からフィルタリング
         let candidates = [];
         const seenIds = new Set();
 
@@ -832,9 +851,8 @@ function setupEventListeners() {
             alert("条件に合致する問題がありません。"); return;
         }
         
-        // シャッフルして5問抽出
         shuffleArray(candidates);
-        currentFieldQuestions = candidates.slice(0, 5); // 5問限定
+        currentFieldQuestions = candidates.slice(0, 5); 
         currentSessionQuestions = currentFieldQuestions;
         
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
@@ -843,14 +861,14 @@ function setupEventListeners() {
         // 試験モード開始
         isExamMode = true;
         resetTimer();
-        startTimer();
         
-        // スコア・解説表示は通常通り（正誤判定即時）
+        // スコア表示も出す
         if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
 
         showLoading(true);
         currentFieldIndex = 0;
         await displayFieldQuestion(currentFieldIndex);
+        // timer start is handled in renderPageInternal
         showLoading(false);
     });
 
@@ -893,11 +911,8 @@ function setupEventListeners() {
         if (currentFieldIndex < currentFieldQuestions.length - 1) { 
             currentFieldIndex++; 
             displayFieldQuestion(currentFieldIndex);
-            
-            // 次の問題へ進んだらタイマー再開
-            if (isExamMode) {
-                startTimer();
-            }
+            // 次の問題へ移動時にタイマー再開 (renderPageInternalでも処理するが念のため)
+            // 実際はrenderPageInternal内で未解答ならstartTimerされる
         }
     });
 
@@ -1009,7 +1024,7 @@ async function initialize() {
 
     // 証明書要素
     certificateContainer = document.getElementById('certificate-container');
-    certImageContainer = document.getElementById('cert-image-container'); // 追加
+    certImageContainer = document.getElementById('cert-image-container'); 
     certScoreNum = document.getElementById('cert-score-num');
     certTimeValue = document.getElementById('cert-time-value');
     certDetailsTableBody = document.querySelector('#cert-details-table tbody');
