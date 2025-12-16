@@ -12,7 +12,8 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     difficultySelect, goBtnDifficulty, resultAreaDifficulty, scoreCorrectDifficulty, showResultsBtnDifficulty,
-    difficultyToggles, difficultyBadge, // 【変更】トグルを配列で管理
+    difficultyToggles, difficultyBadge,
+    filterCheckboxes, // 【追加】フィルター用チェックボックス配列
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn;
 
@@ -45,20 +46,13 @@ function getQuestionId(edition, subject, pageNum) {
 
 /** 現在の問題ID取得 */
 function getCurrentQuestionId() {
-    // 表示中のモードと問題に応じてIDを生成
+    // 全モードをリスト(currentFieldQuestions)ベースに統一したため、ここから取得
     if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
-        // 分野別 または 難易度別モード
         const question = currentFieldQuestions[currentFieldIndex];
-        // 難易度別の場合、questionオブジェクト内にsubjectが含まれている想定
-        const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '');
+        const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         return getQuestionId(question.edition, subject, question.pageNum);
-    } else {
-        // 回数別モード
-        const currentSubjectVal = subjectSelectEdition ? subjectSelectEdition.value : '';
-        const currentEditionVal = editionSelect ? editionSelect.value : '';
-        const pageNumVal = currentPageNum > 0 ? currentPageNum : 'unknown';
-        return getQuestionId(currentEditionVal, currentSubjectVal, pageNumVal);
-    }
+    } 
+    return 'unknown';
 }
 
 /** 索引ファイル(editions.json)読込 */
@@ -99,7 +93,6 @@ async function loadDifficultyData() {
         const data = await response.json();
         difficultyData = data.levels;
 
-        // 1. セレクトボックスの作成
         difficultySelect.innerHTML = '<option value="">難易度を選択...</option>';
         difficultyData.forEach((level, index) => {
             const option = document.createElement('option');
@@ -108,7 +101,7 @@ async function loadDifficultyData() {
             difficultySelect.appendChild(option);
         });
 
-        // 2. 逆引きマップ (Difficulty Map) の作成
+        // ID検索用マップ作成
         difficultyMap = {}; 
         difficultyData.forEach(level => {
             level.questions.forEach(q => {
@@ -149,6 +142,32 @@ async function loadExplanations(edition) {
     }
 }
 
+/** 【追加】難易度フィルター判定 */
+function isDifficultyAllowed(questionId) {
+    // A, B, C のチェック状態を取得 (UI上のいずれかのパネルのチェックボックスを参照)
+    // ここでは、配列 filterCheckboxes に全てのチェックボックスが入っているため、
+    // 値ごとにグループ化して状態を確認する
+    const allowed = new Set();
+    filterCheckboxes.forEach(cb => {
+        if (cb.checked) allowed.add(cb.value);
+    });
+
+    const difficulty = difficultyMap[questionId];
+    // 難易度が定義されていない問題は「表示」とする（またはB扱いなどポリシーによる）
+    if (!difficulty) return true; 
+
+    return allowed.has(difficulty);
+}
+
+/** 【追加】リストの難易度フィルタリング */
+function filterQuestionsByDifficulty(questions, defaultSubject = '') {
+    return questions.filter(q => {
+        const subject = q.subject || defaultSubject;
+        const id = getQuestionId(q.edition, subject, q.pageNum);
+        return isDifficultyAllowed(id);
+    });
+}
+
 /** PDF描画 */
 async function renderPdf(edition, subject, pageNum = 1) {
     if (!canvas) return;
@@ -159,40 +178,46 @@ async function renderPdf(edition, subject, pageNum = 1) {
     try {
         const loadingTask = pdfjsLib.getDocument(url, loadingTaskOptions);
         pdfDoc = await loadingTask.promise;
-        const totalQuestions = pdfDoc.numPages > 1 ? pdfDoc.numPages - 1 : 0;
-        if (currentFieldQuestions.length === 0) {
-            if(pageCountSpan) pageCountSpan.textContent = totalQuestions;
-            populateJumpSelector(totalQuestions);
-        }
+        // 回数別モードもリスト管理になったため、PDF読込時の総ページ数はリスト生成時に使用済み
+        // ここではページ描画のみに集中
         await renderPageInternal(currentPageNum);
     } catch (error) {
         console.error("❌ PDF読込エラー:", error);
         alert(`PDFファイルが見つかりません:\n${url}`);
         const context = canvas.getContext('2d');
         if (context) context.clearRect(0, 0, canvas.width, canvas.height);
-        if(pageCountSpan) pageCountSpan.textContent = '0';
-        if(pageNumSpan) pageNumSpan.textContent = '0';
-        populateJumpSelector(0);
-        if(questionSource) questionSource.style.display = 'none';
     } finally {
         showLoading(false);
     }
 }
 
 /** ジャンプ用プルダウン生成 */
-function populateJumpSelector(totalQuestions) {
+function populateJumpSelector(questions) {
     if (!jumpToSelect) return;
     jumpToSelect.innerHTML = '<option value="">移動...</option>';
-    for (let i = 1; i <= totalQuestions; i++) {
-        const option = document.createElement('option');
-        option.value = i; option.textContent = `問${i}`;
-        jumpToSelect.appendChild(option);
+    // questions配列がある場合はリストに基づいて生成
+    if (Array.isArray(questions)) {
+        questions.forEach((q, index) => {
+            const option = document.createElement('option');
+            // valueはインデックスにする
+            option.value = index; 
+            option.textContent = `問${q.pageNum}`; // 実際のPDF上のページ数を表示
+            jumpToSelect.appendChild(option);
+        });
+    } else {
+        // フォールバック（通常ここは通らない）
+        const total = typeof questions === 'number' ? questions : 0;
+        for (let i = 1; i <= total; i++) {
+            const option = document.createElement('option');
+            option.value = i - 1; // index 0-based
+            option.textContent = `問${i}`;
+            jumpToSelect.appendChild(option);
+        }
     }
 }
 
 /** 難易度表示の更新 */
 function updateDifficultyDisplay(questionId) {
-    // どれか一つのトグルがONなら表示する（同期している前提）
     const isVisible = difficultyToggles.length > 0 && difficultyToggles[0].checked;
     
     if (!difficultyBadge) return;
@@ -203,12 +228,11 @@ function updateDifficultyDisplay(questionId) {
         difficultyBadge.textContent = `難易度: ${difficulty}`;
         difficultyBadge.classList.remove('hidden');
         
-        // 色分け
-        difficultyBadge.className = 'difficulty-badge'; // リセット
+        difficultyBadge.className = 'difficulty-badge'; 
         if (difficulty === 'A') difficultyBadge.classList.add('diff-easy');
         else if (difficulty === 'B') difficultyBadge.classList.add('diff-normal');
         else if (difficulty === 'C') difficultyBadge.classList.add('diff-hard');
-        else difficultyBadge.classList.add('diff-normal'); // デフォルト
+        else difficultyBadge.classList.add('diff-normal');
         
     } else {
         difficultyBadge.classList.add('hidden');
@@ -219,7 +243,6 @@ function updateDifficultyDisplay(questionId) {
 async function renderPageInternal(pdfPageNum) {
     if (!pdfDoc || !canvas) return;
     try {
-        // 現在アクティブなパネルを特定
         let activePanel = panelByEdition;
         if (!panelByField.classList.contains('hidden')) activePanel = panelByField;
         if (!panelByDifficulty.classList.contains('hidden')) activePanel = panelByDifficulty;
@@ -227,30 +250,41 @@ async function renderPageInternal(pdfPageNum) {
         const activeAnswerButtons = activePanel ? activePanel.querySelectorAll('.answer-btn') : [];
         activeAnswerButtons.forEach(btn => { btn.className = 'answer-btn'; btn.disabled = false; });
 
-        // 解説ボタンを非表示にリセット
+        // 解説ボタンリセット
         if(btnExplanationEdition) btnExplanationEdition.classList.add('hidden');
         if(btnExplanationField) btnExplanationField.classList.add('hidden');
         if(btnExplanationDifficulty) btnExplanationDifficulty.classList.add('hidden');
 
-        const page = await pdfDoc.getPage(pdfPageNum + 1);
-        const viewport = page.getViewport({ scale: 1.8 });
+        // PDFのページインデックスは0始まりだが、指定は1始まり。PDF.jsのgetPageは1始まり。
+        const page = await pdfDoc.getPage(pdfPageNum + 1); // pdfPageNumは0-based indexではなく実際のページ番号を想定していたが、リスト化により再確認
+        // currentFieldQuestions[currentFieldIndex].pageNum は「1」始まりのページ番号。
+        // renderPdfの引数 pageNum も「1」始まり。
+        // getPage は 1-based。
+        // したがって pdfPageNum (引数) が 1 なら getPage(1) でOK。
+        // ただし、renderPdf呼び出し側で `parseInt(q.pageNum)` しているのでOK。
+        // ※以前のコードで `getPage(pdfPageNum + 1)` となっていたのは `pdfPageNum` が 0-based index で渡されていた箇所があったためかも。
+        // 今回の統一で `renderPdf` に渡すのは常に「実際のページ番号(1~)」とする。
+        
+        // 修正: renderPdfは `page.render` を呼ぶ。 `pdfDoc.getPage` の引数は 1-based。
+        // 引数 pdfPageNum が 1 なら getPage(1)。
+        // なので +1 は不要か、あるいは呼び出し元を調整する。
+        // 既存コード `getPage(pdfPageNum + 1)` に合わせるなら、呼び出し元は 0-based で渡す必要があるが、
+        // `q.pageNum` は 1, 2, 3... なので、ここでは `getPage(pdfPageNum)` に修正する。
+        
+        const pageObj = await pdfDoc.getPage(pdfPageNum); 
+        const viewport = pageObj.getViewport({ scale: 1.8 });
         const context = canvas.getContext('2d');
         canvas.height = viewport.height; canvas.width = viewport.width;
         context.clearRect(0, 0, canvas.width, canvas.height);
-        await page.render({ canvasContext: context, viewport }).promise;
+        await pageObj.render({ canvasContext: context, viewport }).promise;
 
         // 問題情報の更新
-        let currentQuestionId;
-        let questionEdition, questionSubject, questionPageNum;
-        
         if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
-            // 分野別・難易度別モード
             const question = currentFieldQuestions[currentFieldIndex];
-            questionEdition = question.edition;
-            questionSubject = question.subject || (subjectSelectField ? subjectSelectField.value : '');
-            questionPageNum = question.pageNum;
+            const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
             
-            if(pageNumSpan) pageNumSpan.textContent = currentFieldIndex + 1;
+            if(pageNumSpan) pageNumSpan.textContent = currentFieldIndex + 1; // 何問目か
+            
             let editionDisplayText = `第${question.edition}回`;
              if (editionSelect) {
                  for (let i = 0; i < editionSelect.options.length; i++) {
@@ -263,58 +297,44 @@ async function renderPageInternal(pdfPageNum) {
                 questionSource.textContent = `出典: ${editionDisplayText} 問${question.pageNum}`;
                 questionSource.style.display = 'inline';
             }
-            currentQuestionId = getQuestionId(question.edition, questionSubject, question.pageNum);
-        } else {
-            // 回数別モード
-            questionEdition = editionSelect ? editionSelect.value : '';
-            questionSubject = subjectSelectEdition ? subjectSelectEdition.value : '';
-            questionPageNum = pdfPageNum;
-            if(pageNumSpan) pageNumSpan.textContent = pdfPageNum;
-            if(questionSource) questionSource.style.display = 'none';
-            currentQuestionId = getQuestionId(questionEdition, questionSubject, pdfPageNum);
-            if(jumpToSelect) jumpToSelect.value = pdfPageNum;
-        }
+            
+            const currentQuestionId = getQuestionId(question.edition, subject, question.pageNum);
+            
+            // 結果表示リセット
+            if(resultAreaEdition) resultAreaEdition.textContent = '';
+            if(resultAreaField) resultAreaField.textContent = '';
+            if(resultAreaDifficulty) resultAreaDifficulty.textContent = '';
+            
+            updateNavButtons();
+            updateDifficultyDisplay(currentQuestionId);
 
-        // 結果表示エリアのリセット
-        if(resultAreaEdition) resultAreaEdition.textContent = '';
-        if(resultAreaField) resultAreaField.textContent = '';
-        if(resultAreaDifficulty) resultAreaDifficulty.textContent = '';
-        
-        updateNavButtons();
+            // 履歴反映
+            const history = answerHistory[currentQuestionId];
+            let activeResultArea = resultAreaEdition;
+            if (activePanel === panelByField) activeResultArea = resultAreaField;
+            if (activePanel === panelByDifficulty) activeResultArea = resultAreaDifficulty;
 
-        // 難易度表示更新
-        updateDifficultyDisplay(currentQuestionId);
+            let activeExplanationBtn = btnExplanationEdition;
+            if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
+            if (activePanel === panelByDifficulty) activeExplanationBtn = btnExplanationDifficulty;
 
-        // 履歴があれば反映
-        const history = answerHistory[currentQuestionId];
-        // アクティブな結果エリアを特定
-        let activeResultArea = resultAreaEdition;
-        if (activePanel === panelByField) activeResultArea = resultAreaField;
-        if (activePanel === panelByDifficulty) activeResultArea = resultAreaDifficulty;
+            if (history && activePanel && activeResultArea) {
+                const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${history.selected}"]`);
+                const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
 
-        // アクティブな解説ボタンを特定
-        let activeExplanationBtn = btnExplanationEdition;
-        if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
-        if (activePanel === panelByDifficulty) activeExplanationBtn = btnExplanationDifficulty;
-
-        if (history && activePanel && activeResultArea) {
-            const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${history.selected}"]`);
-            const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
-
-            if (history.correct) {
-                if(selectedButton) selectedButton.classList.add('correct-selection');
-                activeResultArea.textContent = `正解！ 🎉`;
-                activeResultArea.className = 'result-area correct';
-            } else {
-                if(selectedButton) selectedButton.classList.add('incorrect-selection');
-                if(correctButton) correctButton.classList.add('correct-answer');
-                activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
-                activeResultArea.className = 'result-area incorrect';
+                if (history.correct) {
+                    if(selectedButton) selectedButton.classList.add('correct-selection');
+                    activeResultArea.textContent = `正解！ 🎉`;
+                    activeResultArea.className = 'result-area correct';
+                } else {
+                    if(selectedButton) selectedButton.classList.add('incorrect-selection');
+                    if(correctButton) correctButton.classList.add('correct-answer');
+                    activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
+                    activeResultArea.className = 'result-area incorrect';
+                }
+                activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
+                if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
             }
-            activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
-
-            // すでに解答済みの場合は解説ボタンを表示
-            if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
         }
 
     } catch (error) { console.error("❌ ページ描画エラー:", error); }
@@ -367,7 +387,7 @@ function populateFieldSelector() {
     });
 }
 
-/** 分野別・難易度別問題表示 */
+/** 問題表示 (全モード共通ラッパー) */
 async function displayFieldQuestion(index) {
     if (!currentFieldQuestions[index]) return;
     const question = currentFieldQuestions[index];
@@ -376,8 +396,7 @@ async function displayFieldQuestion(index) {
     await loadAnswersForEdition(question.edition);
     await loadExplanations(question.edition);
 
-    // 難易度別の場合、question自体にsubjectが含まれている。分野別はセレクトボックスから。
-    const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '');
+    const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
     await renderPdf(question.edition, subject, parseInt(question.pageNum, 10));
 }
 
@@ -418,10 +437,11 @@ function checkAnswer(selectedChoice) {
 
      if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
          const q = currentFieldQuestions[currentFieldIndex];
-         subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '');
+         subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
          questionPageNum = q.pageNum;
          correctAnswer = currentAnswers?.[subjectKey]?.[questionPageNum];
      } else {
+         // リストベースに移行したためここには来ないはずだが念のため
          subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
          questionPageNum = currentPageNum;
          correctAnswer = currentAnswers?.[subjectKey]?.[questionPageNum];
@@ -451,8 +471,6 @@ function checkAnswer(selectedChoice) {
     }
 
     activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
-
-    // 解答後に解説ボタンを表示
     if(explanationBtn) explanationBtn.classList.remove('hidden');
 }
 
@@ -462,46 +480,36 @@ function showExplanationModal() {
     let pageNum = "";
     let edition = "";
 
-    // モード判定
-    const context = currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]
-        ? { q: currentFieldQuestions[currentFieldIndex], mode: 'field' }
-        : { q: null, mode: 'edition' };
-
-    if (context.mode === 'field') {
-        const q = context.q;
-        subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '');
+    const q = currentFieldQuestions[currentFieldIndex];
+    if (q) {
+        subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         pageNum = q.pageNum;
         edition = q.edition;
     } else {
-        subjectKey = subjectSelectEdition ? subjectSelectEdition.value : '';
-        pageNum = currentPageNum;
-        edition = editionSelect ? editionSelect.value : '';
+        return;
     }
 
-    // データ取得
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
     let displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
 
-    // 数式保護処理
+    // 数式保護
     const mathBlocks = [];
     displayText = displayText.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g, (match) => {
         mathBlocks.push(match);
         return `MATHBLOCK${mathBlocks.length - 1}END`;
     });
 
-    // Marked.js で Markdown を HTML に変換
     if (typeof marked !== 'undefined') {
         explanationBody.innerHTML = marked.parse(displayText);
     } else {
         explanationBody.textContent = displayText;
     }
 
-    // 数式の復元
+    // 数式復元
     explanationBody.innerHTML = explanationBody.innerHTML.replace(/MATHBLOCK(\d+)END/g, (match, index) => {
         return mathBlocks[index];
     });
 
-    // KaTeX で数式をレンダリング
     if (typeof renderMathInElement !== 'undefined') {
         renderMathInElement(explanationBody, {
             delimiters: [
@@ -519,16 +527,11 @@ function showExplanationModal() {
 /** ナビボタン更新 */
 function updateNavButtons() {
     if (!prevBtn || !nextBtn || !jumpToSelect) return;
-    if (currentFieldQuestions.length > 0) {
-        prevBtn.disabled = (currentFieldIndex <= 0);
-        nextBtn.disabled = (currentFieldIndex >= currentFieldQuestions.length - 1);
-        jumpToSelect.disabled = true;
-    } else {
-        const total = pdfDoc ? pdfDoc.numPages - 1 : 0;
-        prevBtn.disabled = (currentPageNum <= 1);
-        nextBtn.disabled = (currentPageNum >= total);
-        jumpToSelect.disabled = false;
-    }
+    prevBtn.disabled = (currentFieldIndex <= 0);
+    nextBtn.disabled = (currentFieldIndex >= currentFieldQuestions.length - 1);
+    
+    // リストモードになったのでジャンプセレクトは常に「移動...」として有効
+    jumpToSelect.disabled = false;
 }
 
 /** 成績ページ表示 */
@@ -544,12 +547,18 @@ function showResults() {
     const tbody = table.querySelector('tbody');
     if (tbody) {
         currentSessionQuestions.forEach((qInfo, index) => {
-            const questionId = getQuestionId(qInfo.edition, qInfo.subject, qInfo.pageNum);
+            const subject = qInfo.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
+            const questionId = getQuestionId(qInfo.edition, subject, qInfo.pageNum);
             const history = answerHistory[questionId];
             const tr = document.createElement('tr');
-            const questionNumDisplay = (currentFieldQuestions.length > 0)? `${index + 1} (第${qInfo.edition}回 問${qInfo.pageNum})`: `問 ${qInfo.pageNum}`;
+            
+            // リスト内のインデックスを探す（フィルターされている可能性があるため）
+            // currentSessionQuestionsはフィルター「後」のリスト。
+            // 復習ボタンのために、このリスト内でのインデックスを維持する。
+            
+            const questionNumDisplay = `第${qInfo.edition}回 問${qInfo.pageNum}`;
             let statusText = '未解答'; let statusClass = '';
-            let yourAnswer = '-'; let correctAnswer = currentAnswers?.[qInfo.subject]?.[qInfo.pageNum] ?? '?';
+            let yourAnswer = '-'; let correctAnswer = currentAnswers?.[subject]?.[qInfo.pageNum] ?? '?';
             if (history) {
                 answeredCount++; yourAnswer = history.selected; correctAnswer = history.correctAnswer;
                 if (history.correct === null) { statusText = '不明'; }
@@ -571,30 +580,11 @@ function showResults() {
             const questionInfo = currentSessionQuestions[index];
             resultsPanel.classList.add('hidden'); exerciseView.classList.remove('hidden');
             
-            // モードに応じた復帰処理
-            // 難易度別モードからの復帰
-            if (!panelByDifficulty.classList.contains('hidden')) {
-                 currentFieldIndex = index;
-                 displayFieldQuestion(index);
-                 return;
-            }
-
-            // 分野別モードからの復帰
-            if (!panelByField.classList.contains('hidden')) {
-                 if(subjectSelectField) subjectSelectField.value = questionInfo.subject;
-                 populateFieldSelector();
-                 currentFieldIndex = index;
-                 displayFieldQuestion(index);
-                 return;
-            }
-
-            // 回数別モードからの復帰
-            if(tabByEdition) tabByEdition.click();
-            if(editionSelect) editionSelect.value = questionInfo.edition;
-            if(subjectSelectEdition) subjectSelectEdition.value = questionInfo.subject;
-            loadExplanations(questionInfo.edition).then(() => {
-                renderPdf(questionInfo.edition, questionInfo.subject, questionInfo.pageNum);
-            });
+            // どのモードに戻るか？ 現在のパネルが表示されているはず。
+            // 単純にリストを復元して再表示
+            currentFieldQuestions = currentSessionQuestions;
+            currentFieldIndex = index;
+            displayFieldQuestion(index);
         });
     });
 }
@@ -609,7 +599,6 @@ function closeCustomSelect() {
 function setupEventListeners() {
     answerButtonsNodeList = document.querySelectorAll('.answer-btn');
 
-    // タブ切り替え処理の修正
     const tabs = [tabByEdition, tabByField, tabByDifficulty];
     const panels = [panelByEdition, panelByField, panelByDifficulty];
 
@@ -631,26 +620,43 @@ function setupEventListeners() {
     if (goBtnEdition) goBtnEdition.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
         correctCount = 0; updateScoreDisplay(); answerHistory = {};
-        currentFieldQuestions = [];
+        
         const selectedEdition = editionSelect ? editionSelect.value : '';
         const selectedSubject = subjectSelectEdition ? subjectSelectEdition.value : '';
-        currentSessionQuestions = [];
+        
+        // 1. PDFを読み込んで総ページ数を取得
         const url = `./pdf/${selectedEdition}/${selectedEdition}_${selectedSubject}.pdf`;
         showLoading(true);
+        let tempQuestions = [];
         try {
             const tempLoadingTask = pdfjsLib.getDocument(url);
             const tempPdfDoc = await tempLoadingTask.promise;
             const total = tempPdfDoc.numPages > 1 ? tempPdfDoc.numPages - 1 : 0;
             for (let i = 1; i <= total; i++) {
-                currentSessionQuestions.push({ edition: selectedEdition, subject: selectedSubject, pageNum: i });
+                tempQuestions.push({ edition: selectedEdition, subject: selectedSubject, pageNum: i });
             }
         } catch (error) {
-             console.error("セッションリスト生成PDF読込失敗", error); alert(`PDFファイルが見つかりません:\n${url}`);
+             console.error("PDF読込失敗", error); alert(`PDFファイルが見つかりません:\n${url}`);
              showLoading(false); return;
         }
-        await loadAnswersForEdition(selectedEdition);
-        await loadExplanations(selectedEdition);
-        await renderPdf(selectedEdition, selectedSubject);
+
+        // 2. フィルタリング適用
+        currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, selectedSubject);
+        currentSessionQuestions = currentFieldQuestions; // セッション保存
+
+        if (currentFieldQuestions.length === 0) {
+            showLoading(false);
+            alert("該当する難易度の問題がありません。");
+            return;
+        }
+
+        // 3. 表示開始
+        if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
+        populateJumpSelector(currentFieldQuestions);
+        currentFieldIndex = 0;
+        
+        await displayFieldQuestion(0);
+        showLoading(false);
     });
 
     // 分野別「表示」
@@ -662,19 +668,24 @@ function setupEventListeners() {
         if (fieldIndex === "" || !fieldsData[subject] || !fieldsData[subject][fieldIndex]) {
              alert("分野を選択してください。"); return;
         }
-        currentFieldQuestions = fieldsData[subject][fieldIndex].questions;
-        // 分野データにはsubjectがない場合があるので補完
-        currentFieldQuestions = currentFieldQuestions.map(q => ({...q, subject: subject}));
         
-        currentFieldIndex = 0;
-        currentSessionQuestions = currentFieldQuestions; // そのまま参照渡し
+        let tempQuestions = fieldsData[subject][fieldIndex].questions;
+        tempQuestions = tempQuestions.map(q => ({...q, subject: subject}));
+        
+        // フィルタリング
+        currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, subject);
+        currentSessionQuestions = currentFieldQuestions;
+        
         if (currentFieldQuestions.length === 0) {
-            alert("この分野には問題が登録されていません。"); return;
+            alert("該当する難易度の問題がありません。"); return;
         }
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
-        populateJumpSelector(0);
+        populateJumpSelector(currentFieldQuestions);
+        
         showLoading(true);
+        currentFieldIndex = 0;
         await displayFieldQuestion(currentFieldIndex);
+        showLoading(false);
     });
 
     // 難易度別「表示」
@@ -685,30 +696,46 @@ function setupEventListeners() {
         const index = difficultySelect ? difficultySelect.value : '';
         if (index === "") { alert("難易度を選択してください。"); return; }
         
-        currentFieldQuestions = difficultyData[index].questions;
+        let tempQuestions = difficultyData[index].questions;
         
-        currentFieldIndex = 0;
+        // フィルタリング (難易度モードでさらに難易度フィルタはおかしいかもしれないが仕様通り実装)
+        currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions);
         currentSessionQuestions = currentFieldQuestions;
         
         if (currentFieldQuestions.length === 0) {
-            alert("この難易度には問題が登録されていません。"); return;
+            alert("該当する問題がありません（フィルター設定を確認してください）。"); return;
         }
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
-        populateJumpSelector(0);
+        populateJumpSelector(currentFieldQuestions);
+        
         showLoading(true);
+        currentFieldIndex = 0;
         await displayFieldQuestion(currentFieldIndex);
+        showLoading(false);
     });
 
-    // 難易度トグル切り替え (全て連動させる)
+    // 難易度表示トグル同期
     if (difficultyToggles.length > 0) {
         difficultyToggles.forEach(toggle => {
             toggle.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
-                // 全てのトグルの状態を合わせる
                 difficultyToggles.forEach(t => t.checked = isChecked);
-                
                 const currentQId = getCurrentQuestionId();
                 updateDifficultyDisplay(currentQId);
+            });
+        });
+    }
+
+    // フィルターチェックボックス同期 (A, B, C それぞれで同期)
+    if (filterCheckboxes.length > 0) {
+        filterCheckboxes.forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const val = e.target.value;
+                const isChecked = e.target.checked;
+                // 同じ値を持つ全てのチェックボックスを同期
+                filterCheckboxes.forEach(other => {
+                    if (other.value === val) other.checked = isChecked;
+                });
             });
         });
     }
@@ -718,18 +745,15 @@ function setupEventListeners() {
     if (subjectSelectField) subjectSelectField.addEventListener('change', populateFieldSelector);
 
     if (prevBtn) prevBtn.addEventListener('click', () => {
-        if (currentFieldQuestions.length > 0) {
-            if (currentFieldIndex > 0) { currentFieldIndex--; displayFieldQuestion(currentFieldIndex); }
-        } else {
-            if (currentPageNum > 1) { currentPageNum--; renderPageInternal(currentPageNum); }
+        if (currentFieldIndex > 0) { 
+            currentFieldIndex--; 
+            displayFieldQuestion(currentFieldIndex); 
         }
     });
     if (nextBtn) nextBtn.addEventListener('click', () => {
-        if (currentFieldQuestions.length > 0) {
-            if (currentFieldIndex < currentFieldQuestions.length - 1) { currentFieldIndex++; displayFieldQuestion(currentFieldIndex); }
-        } else {
-            const total = pdfDoc ? pdfDoc.numPages - 1 : 0;
-            if (currentPageNum < total) { currentPageNum++; renderPageInternal(currentPageNum); }
+        if (currentFieldIndex < currentFieldQuestions.length - 1) { 
+            currentFieldIndex++; 
+            displayFieldQuestion(currentFieldIndex); 
         }
     });
 
@@ -743,13 +767,13 @@ function setupEventListeners() {
     });
 
     if (jumpToSelect) jumpToSelect.addEventListener('change', (e) => {
-        if (currentFieldQuestions.length === 0) {
-            const target = parseInt(e.target.value, 10);
-            if (target) { currentPageNum = target; renderPageInternal(currentPageNum); }
+        const targetIndex = parseInt(e.target.value, 10);
+        if (!isNaN(targetIndex) && currentFieldQuestions[targetIndex]) {
+            currentFieldIndex = targetIndex;
+            displayFieldQuestion(currentFieldIndex);
         }
     });
     
-    // 成績表示ボタン
     if (showResultsBtnEdition) showResultsBtnEdition.addEventListener('click', showResults);
     if (showResultsBtnField) showResultsBtnField.addEventListener('click', showResults);
     if (showResultsBtnDifficulty) showResultsBtnDifficulty.addEventListener('click', showResults);
@@ -759,7 +783,6 @@ function setupEventListeners() {
         if(exerciseView) exerciseView.classList.remove('hidden');
     });
 
-    // カスタムプルダウンのイベント
     if (selectSelected) selectSelected.addEventListener('click', function(e) {
         e.stopPropagation();
         if(selectItems) selectItems.classList.toggle('select-hide');
@@ -767,7 +790,6 @@ function setupEventListeners() {
     });
     document.addEventListener('click', function() { closeCustomSelect(); });
 
-    // 解説ボタンとモーダルのイベント
     if (btnExplanationEdition) btnExplanationEdition.addEventListener('click', showExplanationModal);
     if (btnExplanationField) btnExplanationField.addEventListener('click', showExplanationModal);
     if (btnExplanationDifficulty) btnExplanationDifficulty.addEventListener('click', showExplanationModal);
@@ -828,8 +850,9 @@ async function initialize() {
     scoreCorrectDifficulty = panelByDifficulty ? panelByDifficulty.querySelector('.score-correct') : null;
     showResultsBtnDifficulty = document.getElementById('show-results-btn-difficulty');
     
-    // 難易度トグル (クラスでまとめて取得)
+    // トグル・フィルター
     difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
+    filterCheckboxes = document.querySelectorAll('.diff-filter-cb'); // 追加
     difficultyBadge = document.getElementById('difficulty-badge');
 
     questionSource = document.getElementById('question-source');
@@ -837,7 +860,7 @@ async function initialize() {
     resultsList = document.getElementById('results-list');
     backToExerciseBtn = document.getElementById('back-to-exercise-btn');
 
-    // 解説機能用の要素取得
+    // 解説機能
     btnExplanationEdition = document.getElementById('btn-explanation-edition');
     btnExplanationField = document.getElementById('btn-explanation-field');
     btnExplanationDifficulty = document.getElementById('btn-explanation-difficulty');
