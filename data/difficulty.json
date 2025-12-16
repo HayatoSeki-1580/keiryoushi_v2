@@ -1,0 +1,28 @@
+{
+  "levels": [
+    {
+      "levelName": "難易度 A (易しい)",
+      "value": "A",
+      "questions": [
+        { "edition": "75", "subject": "houki", "pageNum": "1" },
+        { "edition": "75", "subject": "kanka", "pageNum": "5" }
+        // ... ここにAランクの問題を列挙
+      ]
+    },
+    {
+      "levelName": "難易度 B (普通)",
+      "value": "B",
+      "questions": [
+        { "edition": "74", "subject": "houki", "pageNum": "2" }
+        // ... ここにBランクの問題を列挙
+      ]
+    },
+    {
+      "levelName": "難易度 C (難しい)",
+      "value": "C",
+      "questions": [
+        // ... ここにCランクの問題を列挙
+      ]
+    }
+  ]
+}
