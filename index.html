@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>過去問演習ブラウザ</title>
+    <title>計量士国家試験 演習ブラウザ</title>
     <link rel="stylesheet" href="style.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <style>
         /* 解説ボタン（初期は非表示） */
@@ -73,7 +74,7 @@
     </style>
 </head>
 <body>
-    <h1>過去問演習ブラウザ</h1>
+    <h1>計量士国家試験 演習ブラウザ</h1>
 
     <div id="exercise-view">
 
@@ -281,7 +282,7 @@
         <div id="certificate-container" class="certificate hidden">
             <div class="cert-header">成績証明書</div>
             <div class="cert-body">
-                <p>あなたは過去問演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
+                <p>あなたは計量士国家試験 演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
                 <div class="cert-score-area">
                     <div class="cert-score-label">スコア</div>
                     <div class="cert-score-value">
@@ -307,8 +308,10 @@
 
                 <div class="cert-date" id="cert-date"></div>
             </div>
-            <div class="cert-footer">過去問演習ブラウザ運営事務局</div>
+            <div class="cert-footer">計量士委員会</div>
         </div>
+
+        <div id="cert-image-container" class="hidden" style="text-align:center; margin-bottom:30px;"></div>
 
         <div id="results-summary"></div>
         <div id="results-list"></div>
