@@ -142,16 +142,19 @@ async function loadExplanations(edition) {
 /** 難易度フィルター判定 */
 function isDifficultyAllowed(questionId) {
     const allowed = new Set();
+    // モードによって対象のチェックボックスを変えるべきだが、
+    // ここではグローバルなfilterCheckboxes（通常モード用）を参照する標準関数
     filterCheckboxes.forEach(cb => {
         if (cb.checked) allowed.add(cb.value);
     });
 
-    const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
     const difficulty = difficultyMap[questionId];
     
+    // 難易度未定義の場合、'none' が許可されていればOK
     if (!difficulty) {
-        return isAllChecked;
+        return allowed.has('none');
     }
+    // 難易度定義ありの場合
     return allowed.has(difficulty);
 }
 
@@ -178,14 +181,11 @@ function updateTimer() {
     if (!examTimerSpan) return;
     
     let totalSeconds = 0;
-    
     if (isTimerRunning) {
-        // 動いている時: 過去の蓄積 + 今回の経過時間
         const now = Date.now();
         const currentSession = now - examStartTime;
         totalSeconds = Math.floor((examElapsedTime + currentSession) / 1000);
     } else {
-        // 止まっている時: 蓄積時間のみ
         totalSeconds = Math.floor(examElapsedTime / 1000);
     }
 
@@ -200,11 +200,11 @@ function startTimer() {
     examStartTime = Date.now();
     if(examTimerSpan) examTimerSpan.classList.remove('hidden');
     isTimerRunning = true;
-    updateTimer(); // 即時更新
+    updateTimer(); 
     examTimerInterval = setInterval(updateTimer, 1000);
 }
 
-/** タイマー一時停止 */
+/** タイマー停止 */
 function stopTimer() {
     if (!isTimerRunning) return;
     
@@ -212,10 +212,9 @@ function stopTimer() {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
-    // 時間を確定して蓄積
     examElapsedTime += Date.now() - examStartTime;
     isTimerRunning = false;
-    updateTimer(); // 最終状態を表示
+    updateTimer(); 
 }
 
 /** タイマーリセット */
@@ -339,6 +338,7 @@ async function renderPageInternal(pdfPageNum) {
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
         }
 
+        // 表紙スキップ (+1)
         const pageObj = await pdfDoc.getPage(pdfPageNum + 1); 
         
         const viewport = pageObj.getViewport({ scale: 1.8 });
@@ -347,8 +347,6 @@ async function renderPageInternal(pdfPageNum) {
         context.clearRect(0, 0, canvas.width, canvas.height);
         await pageObj.render({ canvasContext: context, viewport }).promise;
 
-        // 問題描画が完了したタイミング
-        // 問題情報を更新
         if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
             const question = currentFieldQuestions[currentFieldIndex];
             const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
@@ -388,6 +386,7 @@ async function renderPageInternal(pdfPageNum) {
             if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
 
             // 未解答かつ試験モードならタイマーをスタート
+            // ページ表示完了時 = 問題を見始めたとみなす
             if (isExamMode && !history) {
                 startTimer();
             }
@@ -534,7 +533,7 @@ function checkAnswer(selectedChoice) {
         return;
     }
 
-    // 【修正】解答したらタイマー停止
+    // 解答したらタイマー停止
     if (isExamMode) {
         stopTimer();
     }
@@ -861,6 +860,7 @@ function setupEventListeners() {
         // 試験モード開始
         isExamMode = true;
         resetTimer();
+        // ここではstartTimerせず、問題描画完了時に開始する
         
         // スコア表示も出す
         if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
@@ -868,7 +868,6 @@ function setupEventListeners() {
         showLoading(true);
         currentFieldIndex = 0;
         await displayFieldQuestion(currentFieldIndex);
-        // timer start is handled in renderPageInternal
         showLoading(false);
     });
 
@@ -911,8 +910,7 @@ function setupEventListeners() {
         if (currentFieldIndex < currentFieldQuestions.length - 1) { 
             currentFieldIndex++; 
             displayFieldQuestion(currentFieldIndex);
-            // 次の問題へ移動時にタイマー再開 (renderPageInternalでも処理するが念のため)
-            // 実際はrenderPageInternal内で未解答ならstartTimerされる
+            // 次の問題へ移動時は描画完了時にタイマー再開
         }
     });
 
