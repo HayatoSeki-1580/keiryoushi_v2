@@ -80,7 +80,7 @@
         <div class="mode-tabs">
             <button id="tab-by-edition" class="tab-btn active">回数別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
-            <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
+            <button id="tab-shuffle" class="tab-btn">模擬試験 (5問)</button>
         </div>
 
         <div id="panel-by-edition" class="control-panel">
@@ -196,19 +196,18 @@
 
         <div id="panel-shuffle" class="control-panel hidden">
             <div class="top-row">
-                <div class="select-group">
-                    <label for="subject-select-shuffle">科目:</label>
-                    <select id="subject-select-shuffle">
-                        <option value="all">全科目</option>
-                        <option value="kanka">環化</option>
-                        <option value="kanbutsu">環物</option>
-                        <option value="kannou">環濃</option>
-                        <option value="kanon">環音</option>
-                        <option value="houki">法規</option>
-                        <option value="kanri">管理</option>
-                        <option value="ichiki">一基</option>
-                        <option value="keishitsu">計質</option>
-                    </select>
+                <div class="subject-checkbox-container">
+                    <span class="filter-label">出題科目:</span>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" value="kanka" checked class="shuffle-subject-cb">環化</label>
+                        <label><input type="checkbox" value="kanbutsu" checked class="shuffle-subject-cb">環物</label>
+                        <label><input type="checkbox" value="kannou" checked class="shuffle-subject-cb">環濃</label>
+                        <label><input type="checkbox" value="kanon" checked class="shuffle-subject-cb">環音</label>
+                        <label><input type="checkbox" value="houki" checked class="shuffle-subject-cb">法規</label>
+                        <label><input type="checkbox" value="kanri" checked class="shuffle-subject-cb">管理</label>
+                        <label><input type="checkbox" value="ichiki" checked class="shuffle-subject-cb">一基</label>
+                        <label><input type="checkbox" value="keishitsu" checked class="shuffle-subject-cb">計質</label>
+                    </div>
                 </div>
 
                  <div class="filter-group">
@@ -218,13 +217,11 @@
                     <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
                 </div>
 
-                <button id="go-btn-shuffle">シャッフル出題</button>
-                
-                <div class="toggle-group">
-                     <label for="toggle-diff-shuffle">難易度を表示</label>
-                     <input type="checkbox" id="toggle-diff-shuffle" class="difficulty-toggle-checkbox">
-                </div>
+                <button id="go-btn-shuffle" class="exam-start-btn">試験開始 (5問)</button>
             </div>
+            
+            <div class="exam-notice">※試験モードでは解答時の正誤表示や解説は非表示になります。</div>
+
             <div class="actions-row">
                 <div class="answer-group">
                    <span class="answer-label">解答:</span>
@@ -236,11 +233,15 @@
                        <button class="answer-btn" data-choice="5">5</button>
                    </div>
                </div>
-               <div id="score-counter-shuffle" class="score-counter">
+               
+               <div id="score-counter-shuffle" class="score-counter hidden">
                    正答数: <span class="score-correct">0</span>
                </div>
-               <button id="show-results-btn-shuffle" class="results-btn">成績を見る</button>
+               
+               <button id="finish-exam-btn" class="results-btn hidden">試験終了</button>
+               <button id="show-results-btn-shuffle" class="results-btn hidden">成績を見る</button>
                <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
+               
                <div id="result-area-shuffle" class="result-area"></div>
            </div>
        </div>
@@ -250,6 +251,8 @@
             <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
             <span id="difficulty-badge" class="difficulty-badge hidden"></span>
             
+            <span id="exam-timer" class="exam-timer hidden">00:00</span>
+
             <button id="next-btn">次の問題 ▶</button>
             <select id="jump-to-select" class="jump-select">
                 <option value="">移動...</option>
@@ -273,6 +276,39 @@
 
     <div id="results-panel" class="hidden">
         <h2>成績一覧</h2>
+        
+        <div id="certificate-container" class="certificate hidden">
+            <div class="cert-header">成績証明書</div>
+            <div class="cert-body">
+                <p>あなたは過去問演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
+                <div class="cert-score-area">
+                    <div class="cert-score-label">スコア</div>
+                    <div class="cert-score-value">
+                        <span id="cert-score-num">0</span> / 5 点
+                    </div>
+                </div>
+                <div class="cert-time-area">
+                    解答時間: <span id="cert-time-value">--:--</span>
+                </div>
+                
+                <div class="cert-details">
+                    <table id="cert-details-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>出題元</th>
+                                <th>結果</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="cert-date" id="cert-date"></div>
+            </div>
+            <div class="cert-footer">過去問演習ブラウザ運営事務局</div>
+        </div>
+
         <div id="results-summary"></div>
         <div id="results-list"></div>
         <button id="back-to-exercise-btn">演習に戻る</button>
