@@ -5,14 +5,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
 // --- グローバル変数 ---
 let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     pageNumSpan, pageCountSpan, prevBtn, nextBtn, jumpToSelect,
-    tabByEdition, tabByField, tabByDifficulty, // 追加
-    panelByEdition, panelByField, panelByDifficulty, // 追加
+    tabByEdition, tabByField, tabByDifficulty,
+    panelByEdition, panelByField, panelByDifficulty,
     editionSelect, subjectSelectEdition, goBtnEdition, resultAreaEdition, scoreCorrectEdition, showResultsBtnEdition,
     subjectSelectField,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
-    difficultySelect, goBtnDifficulty, resultAreaDifficulty, scoreCorrectDifficulty, showResultsBtnDifficulty, // 追加
-    showDifficultyToggle, difficultyBadge, // 追加
+    difficultySelect, goBtnDifficulty, resultAreaDifficulty, scoreCorrectDifficulty, showResultsBtnDifficulty,
+    difficultyToggles, difficultyBadge, // 【変更】トグルを配列で管理
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn;
 
@@ -24,8 +24,8 @@ let pdfDoc = null;
 let currentPageNum = 1;
 let currentAnswers = {};
 let fieldsData = {};
-let difficultyData = []; // 追加: 難易度JSONデータ
-let difficultyMap = {};  // 追加: IDから難易度を引くための辞書
+let difficultyData = []; 
+let difficultyMap = {};  
 let currentFieldQuestions = [];
 let currentFieldIndex = 0;
 let correctCount = 0;
@@ -90,7 +90,7 @@ async function loadFieldsData() {
     } catch (error) { console.error("❌ fields.json読込エラー:", error); }
 }
 
-/** 【追加】難易度ファイル(difficulty.json)読込 */
+/** 難易度ファイル(difficulty.json)読込 */
 async function loadDifficultyData() {
     if (!difficultySelect) return;
     try {
@@ -103,13 +103,12 @@ async function loadDifficultyData() {
         difficultySelect.innerHTML = '<option value="">難易度を選択...</option>';
         difficultyData.forEach((level, index) => {
             const option = document.createElement('option');
-            option.value = index; // 配列のインデックスをvalueにする
+            option.value = index; 
             option.textContent = `${level.levelName} (${level.questions.length}問)`;
             difficultySelect.appendChild(option);
         });
 
         // 2. 逆引きマップ (Difficulty Map) の作成
-        // Key: "75-houki-1", Value: "A"
         difficultyMap = {}; 
         difficultyData.forEach(level => {
             level.questions.forEach(q => {
@@ -191,12 +190,14 @@ function populateJumpSelector(totalQuestions) {
     }
 }
 
-/** 【追加】難易度表示の更新 */
+/** 難易度表示の更新 */
 function updateDifficultyDisplay(questionId) {
-    if (!difficultyBadge || !showDifficultyToggle) return;
+    // どれか一つのトグルがONなら表示する（同期している前提）
+    const isVisible = difficultyToggles.length > 0 && difficultyToggles[0].checked;
+    
+    if (!difficultyBadge) return;
 
     const difficulty = difficultyMap[questionId];
-    const isVisible = showDifficultyToggle.checked;
 
     if (isVisible && difficulty) {
         difficultyBadge.textContent = `難易度: ${difficulty}`;
@@ -221,7 +222,7 @@ async function renderPageInternal(pdfPageNum) {
         // 現在アクティブなパネルを特定
         let activePanel = panelByEdition;
         if (!panelByField.classList.contains('hidden')) activePanel = panelByField;
-        if (!panelByDifficulty.classList.contains('hidden')) activePanel = panelByDifficulty; // 追加
+        if (!panelByDifficulty.classList.contains('hidden')) activePanel = panelByDifficulty;
 
         const activeAnswerButtons = activePanel ? activePanel.querySelectorAll('.answer-btn') : [];
         activeAnswerButtons.forEach(btn => { btn.className = 'answer-btn'; btn.disabled = false; });
@@ -229,7 +230,7 @@ async function renderPageInternal(pdfPageNum) {
         // 解説ボタンを非表示にリセット
         if(btnExplanationEdition) btnExplanationEdition.classList.add('hidden');
         if(btnExplanationField) btnExplanationField.classList.add('hidden');
-        if(btnExplanationDifficulty) btnExplanationDifficulty.classList.add('hidden'); // 追加
+        if(btnExplanationDifficulty) btnExplanationDifficulty.classList.add('hidden');
 
         const page = await pdfDoc.getPage(pdfPageNum + 1);
         const viewport = page.getViewport({ scale: 1.8 });
@@ -246,7 +247,6 @@ async function renderPageInternal(pdfPageNum) {
             // 分野別・難易度別モード
             const question = currentFieldQuestions[currentFieldIndex];
             questionEdition = question.edition;
-            // 難易度別データはsubjectを持っているのでそれを使う。なければ分野選択の値を使う
             questionSubject = question.subject || (subjectSelectField ? subjectSelectField.value : '');
             questionPageNum = question.pageNum;
             
@@ -278,7 +278,7 @@ async function renderPageInternal(pdfPageNum) {
         // 結果表示エリアのリセット
         if(resultAreaEdition) resultAreaEdition.textContent = '';
         if(resultAreaField) resultAreaField.textContent = '';
-        if(resultAreaDifficulty) resultAreaDifficulty.textContent = ''; // 追加
+        if(resultAreaDifficulty) resultAreaDifficulty.textContent = '';
         
         updateNavButtons();
 
@@ -385,7 +385,7 @@ async function displayFieldQuestion(index) {
 function updateScoreDisplay() {
     if(scoreCorrectEdition) scoreCorrectEdition.textContent = correctCount;
     if(scoreCorrectField) scoreCorrectField.textContent = correctCount;
-    if(scoreCorrectDifficulty) scoreCorrectDifficulty.textContent = correctCount; // 追加
+    if(scoreCorrectDifficulty) scoreCorrectDifficulty.textContent = correctCount;
 }
 
 /** 正誤判定 */
@@ -401,7 +401,7 @@ function checkAnswer(selectedChoice) {
         activePanel = panelByField;
         resultArea = resultAreaField;
         explanationBtn = btnExplanationField;
-    } else if (!panelByDifficulty.classList.contains('hidden')) { // 追加
+    } else if (!panelByDifficulty.classList.contains('hidden')) {
         activePanel = panelByDifficulty;
         resultArea = resultAreaDifficulty;
         explanationBtn = btnExplanationDifficulty;
@@ -581,10 +581,8 @@ function showResults() {
 
             // 分野別モードからの復帰
             if (!panelByField.classList.contains('hidden')) {
-                 // 既存ロジック
                  if(subjectSelectField) subjectSelectField.value = questionInfo.subject;
                  populateFieldSelector();
-                 // セレクトボックスの同期処理などは簡略化
                  currentFieldIndex = index;
                  displayFieldQuestion(index);
                  return;
@@ -679,7 +677,7 @@ function setupEventListeners() {
         await displayFieldQuestion(currentFieldIndex);
     });
 
-    // 【追加】難易度別「表示」
+    // 難易度別「表示」
     if (goBtnDifficulty) goBtnDifficulty.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
         correctCount = 0; updateScoreDisplay(); answerHistory = {};
@@ -688,8 +686,6 @@ function setupEventListeners() {
         if (index === "") { alert("難易度を選択してください。"); return; }
         
         currentFieldQuestions = difficultyData[index].questions;
-        // 難易度データは既にsubjectを持っているはずだが念のため確認
-        // (difficulty.json作成時にsubjectを含めている前提)
         
         currentFieldIndex = 0;
         currentSessionQuestions = currentFieldQuestions;
@@ -703,11 +699,19 @@ function setupEventListeners() {
         await displayFieldQuestion(currentFieldIndex);
     });
 
-    // 難易度トグル切り替え
-    if (showDifficultyToggle) showDifficultyToggle.addEventListener('change', () => {
-        const currentQId = getCurrentQuestionId();
-        updateDifficultyDisplay(currentQId);
-    });
+    // 難易度トグル切り替え (全て連動させる)
+    if (difficultyToggles.length > 0) {
+        difficultyToggles.forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                // 全てのトグルの状態を合わせる
+                difficultyToggles.forEach(t => t.checked = isChecked);
+                
+                const currentQId = getCurrentQuestionId();
+                updateDifficultyDisplay(currentQId);
+            });
+        });
+    }
 
     if (subjectSelectEdition) subjectSelectEdition.addEventListener('change', (e) => { });
     if (editionSelect) editionSelect.addEventListener('change', (e) => { });
@@ -745,10 +749,10 @@ function setupEventListeners() {
         }
     });
     
-    // 成績表示ボタン (配列化したのでまとめて処理も可能だが、個別指定のままにする)
+    // 成績表示ボタン
     if (showResultsBtnEdition) showResultsBtnEdition.addEventListener('click', showResults);
     if (showResultsBtnField) showResultsBtnField.addEventListener('click', showResults);
-    if (showResultsBtnDifficulty) showResultsBtnDifficulty.addEventListener('click', showResults); // 追加
+    if (showResultsBtnDifficulty) showResultsBtnDifficulty.addEventListener('click', showResults);
 
     if (backToExerciseBtn) backToExerciseBtn.addEventListener('click', () => {
         if(resultsPanel) resultsPanel.classList.add('hidden');
@@ -766,7 +770,7 @@ function setupEventListeners() {
     // 解説ボタンとモーダルのイベント
     if (btnExplanationEdition) btnExplanationEdition.addEventListener('click', showExplanationModal);
     if (btnExplanationField) btnExplanationField.addEventListener('click', showExplanationModal);
-    if (btnExplanationDifficulty) btnExplanationDifficulty.addEventListener('click', showExplanationModal); // 追加
+    if (btnExplanationDifficulty) btnExplanationDifficulty.addEventListener('click', showExplanationModal);
 
     if (closeModalSpan) closeModalSpan.addEventListener('click', () => { explanationModal.style.display = "none"; });
     window.addEventListener('click', (e) => {
@@ -792,12 +796,12 @@ async function initialize() {
     // タブ
     tabByEdition = document.getElementById('tab-by-edition');
     tabByField = document.getElementById('tab-by-field');
-    tabByDifficulty = document.getElementById('tab-by-difficulty'); // 追加
+    tabByDifficulty = document.getElementById('tab-by-difficulty');
 
     // パネル
     panelByEdition = document.getElementById('panel-by-edition');
     panelByField = document.getElementById('panel-by-field');
-    panelByDifficulty = document.getElementById('panel-by-difficulty'); // 追加
+    panelByDifficulty = document.getElementById('panel-by-difficulty');
 
     // 回数別
     editionSelect = document.getElementById('edition-select');
@@ -817,13 +821,15 @@ async function initialize() {
     scoreCorrectField = panelByField ? panelByField.querySelector('.score-correct') : null;
     showResultsBtnField = document.getElementById('show-results-btn-field');
     
-    // 難易度別 (追加)
+    // 難易度別
     difficultySelect = document.getElementById('difficulty-select');
     goBtnDifficulty = document.getElementById('go-btn-difficulty');
     resultAreaDifficulty = document.getElementById('result-area-difficulty');
     scoreCorrectDifficulty = panelByDifficulty ? panelByDifficulty.querySelector('.score-correct') : null;
     showResultsBtnDifficulty = document.getElementById('show-results-btn-difficulty');
-    showDifficultyToggle = document.getElementById('show-difficulty-toggle');
+    
+    // 難易度トグル (クラスでまとめて取得)
+    difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
     difficultyBadge = document.getElementById('difficulty-badge');
 
     questionSource = document.getElementById('question-source');
@@ -834,7 +840,7 @@ async function initialize() {
     // 解説機能用の要素取得
     btnExplanationEdition = document.getElementById('btn-explanation-edition');
     btnExplanationField = document.getElementById('btn-explanation-field');
-    btnExplanationDifficulty = document.getElementById('btn-explanation-difficulty'); // 追加
+    btnExplanationDifficulty = document.getElementById('btn-explanation-difficulty');
     explanationModal = document.getElementById('explanation-modal');
     explanationBody = document.getElementById('explanation-body');
     explanationTitle = document.getElementById('explanation-title');
@@ -842,7 +848,7 @@ async function initialize() {
 
     await setupEditionSelector();
     await loadFieldsData();
-    await loadDifficultyData(); // 追加
+    await loadDifficultyData();
 
     setupEventListeners();
 
