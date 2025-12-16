@@ -296,7 +296,18 @@ select {
     display: inline-block;
     padding-bottom: 10px;
 }
-.cert-body { margin-bottom: 30px; }
+.cert-body { margin-bottom: 30px; text-align: center;} /* 中央揃え強化 */
+.cert-meta {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    color: #555;
+    text-align: center; /* 中央揃え */
+    display: inline-block; /* インラインブロックで中央配置 */
+    text-align: left; /* 内部は左揃えで見やすく */
+}
+.cert-meta-row { margin-bottom: 5px; }
+.cert-label { font-weight: bold; display: inline-block; min-width: 80px; }
+
 .cert-score-area { margin: 20px 0; }
 .cert-score-label { font-size: 1.2em; color: #555; }
 .cert-score-value { font-size: 3em; font-weight: bold; color: #e74c3c; }
@@ -310,13 +321,6 @@ select {
 .cert-x { color: #dc3545; font-weight: bold; font-size: 1.2em; }
 .cert-date { font-size: 1em; color: #777; margin-top: 20px; }
 .cert-footer { font-size: 1.1em; font-weight: bold; margin-top: 30px; }
-
-
-/* ======== ロード中スピナー ======== */
-.spinner-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-.spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #007bff; animation: spin 1s ease infinite; margin-bottom: 10px; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.spinner-overlay p { font-weight: bold; color: #333; }
 
 
 /* ======== 汎用クラス ======== */
