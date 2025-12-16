@@ -80,6 +80,7 @@
         <div class="mode-tabs">
             <button id="tab-by-edition" class="tab-btn active">回数別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
+            <button id="tab-by-difficulty" class="tab-btn">難易度別演習</button>
         </div>
 
         <div id="panel-by-edition" class="control-panel">
@@ -102,7 +103,8 @@
                     </select>
                 </div>
                 <button id="go-btn-edition">表示</button>
-            </div>
+                
+                </div>
             <div class="actions-row">
                 <div class="answer-group">
                     <span class="answer-label">解答:</span>
@@ -167,9 +169,46 @@
             </div>
         </div>
 
+        <div id="panel-by-difficulty" class="control-panel hidden">
+            <div class="top-row">
+                <div class="select-group">
+                    <label for="difficulty-select">難易度:</label>
+                    <select id="difficulty-select">
+                        <option value="">選択してください...</option>
+                    </select>
+                </div>
+                <button id="go-btn-difficulty">表示</button>
+                
+                <div class="toggle-group" style="margin-left: auto; display: flex; align-items: center;">
+                     <label for="show-difficulty-toggle" style="margin-right: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em;">難易度を表示</label>
+                     <input type="checkbox" id="show-difficulty-toggle">
+                </div>
+            </div>
+            <div class="actions-row">
+                <div class="answer-group">
+                   <span class="answer-label">解答:</span>
+                   <div class="answer-buttons">
+                       <button class="answer-btn" data-choice="1">1</button>
+                       <button class="answer-btn" data-choice="2">2</button>
+                       <button class="answer-btn" data-choice="3">3</button>
+                       <button class="answer-btn" data-choice="4">4</button>
+                       <button class="answer-btn" data-choice="5">5</button>
+                   </div>
+               </div>
+               <div id="score-counter-difficulty" class="score-counter">
+                   正答数: <span class="score-correct">0</span>
+               </div>
+               <button id="show-results-btn-difficulty" class="results-btn">成績を見る</button>
+               <button id="btn-explanation-difficulty" class="explanation-btn hidden">解説を見る</button>
+               <div id="result-area-difficulty" class="result-area"></div>
+           </div>
+       </div>
+
         <div class="navigation">
             <button id="prev-btn">◀ 前の問題</button>
             <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
+            <span id="difficulty-badge" class="difficulty-badge hidden"></span>
+            
             <button id="next-btn">次の問題 ▶</button>
             <select id="jump-to-select" class="jump-select">
                 <option value="">移動...</option>
@@ -180,7 +219,7 @@
         <div class="viewer-container">
             <div id="welcome-overlay">
                 <h2>過去問演習へようこそ！</h2>
-                <p>学習したいモードと科目を選択して「表示」ボタンを押してください。</p>
+                <p>学習したいモードを選択して「表示」ボタンを押してください。</p>
             </div>
             <div id="loading-spinner" class="spinner-overlay hidden">
                 <div class="spinner"></div>
