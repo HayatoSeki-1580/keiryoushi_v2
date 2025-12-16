@@ -6,28 +6,28 @@ body {
     padding: 1em;
     background-color: #f4f4f9;
     color: #333;
-    overflow-x: hidden; /* 横スクロールを禁止 */
+    overflow-x: hidden;
 }
 
 h1 {
     color: #444;
-    text-align: center; /* 中央揃え */
+    text-align: center; 
     margin-bottom: 1em;
 }
 
 /* ======== 主要コンテナのレスポンシブ設定 ======== */
 .control-panel, .navigation, .viewer-container, #results-panel {
-    width: 100%; /* 基本は画面幅いっぱいに */
-    max-width: 800px; /* PCでの最大幅 */
+    width: 100%; 
+    max-width: 800px;
     margin-left: auto;
     margin-right: auto;
-    box-sizing: border-box; /* paddingを含めて幅計算 */
+    box-sizing: border-box;
 }
 
 /* ======== タブのスタイル ======== */
 .mode-tabs {
     display: flex;
-    justify-content: center; /* 中央揃え */
+    justify-content: center;
     width: 100%;
     max-width: 800px;
     margin-left: auto;
@@ -37,7 +37,7 @@ h1 {
 }
 
 .tab-btn {
-    padding: 0.8em 1em; /* スマホ向けに左右padding少し減らす */
+    padding: 0.8em 1em;
     border: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
     background-color: #f0f0f0;
@@ -48,8 +48,8 @@ h1 {
     color: #555;
     transition: background-color 0.2s, color 0.2s;
     text-align: center;
-    flex-grow: 1; /* タブが均等に幅を取る */
-    max-width: 200px; /* タブが広がりすぎないように */
+    flex-grow: 1;
+    max-width: 200px;
 }
 
 .tab-btn.active {
@@ -64,8 +64,8 @@ h1 {
     flex-direction: column;
     gap: 1em;
     background: #fff;
-    padding: 1em; /* スマホ向けにpadding少し減らす */
-    border-radius: 0 0 8px 8px; /* タブの下に繋がるように */
+    padding: 1em;
+    border-radius: 0 0 8px 8px;
     border: 1px solid #ccc;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 1em;
@@ -73,9 +73,9 @@ h1 {
 
 .top-row, .actions-row {
     display: flex;
-    flex-wrap: wrap; /* スマホで折り返すように */
+    flex-wrap: wrap; 
     align-items: center;
-    gap: 0.8em 1em; /* 縦横の隙間調整 */
+    gap: 0.8em 1em;
 }
 
 .actions-row {
@@ -83,10 +83,10 @@ h1 {
 }
 
 .select-group {
-    display: grid; /* ラベルとセレクトを横並び */
+    display: grid;
     align-items: center;
-    flex-grow: 1; /* 横幅いっぱいに広がる */
-    min-width: 200px; /* 折り返し時の最小幅 */
+    flex-grow: 1;
+    min-width: 200px;
 }
 
 .select-group label {
@@ -95,23 +95,22 @@ h1 {
     white-space: nowrap;
 }
 
-select { /* 標準のselectタグのスタイル */
+select {
     padding: 0.5em;
     border-radius: 4px;
     border: 1px solid #ccc;
     background-color: #fff;
-    flex-grow: 1; /* 横幅いっぱいに広がる */
-    width: auto; /* width指定を解除 */
-    min-width: 100px; /* 最小幅 */
+    flex-grow: 1;
+    width: auto;
+    min-width: 100px;
 }
 
-/* ======== カスタムプルダウンのスタイル (z-index削除・overflow削除) ======== */
+/* ======== カスタムプルダウン ======== */
 .custom-select {
     position: relative;
     flex-grow: 1;
     min-width: 0;
     font-size: 1em;
-    /* overflow: hidden; */ /* ← 削除 */
 }
 
 .select-selected {
@@ -127,12 +126,11 @@ select { /* 標準のselectタグのスタイル */
     height: 2.2em;
     box-sizing: border-box;
     line-height: 1.2em;
-    position: relative; /* 矢印の位置基準のため残す */
+    position: relative;
     width: 100%;
-    /* z-index: 2; */ /* ← 削除 */
 }
 
-.select-selected:after { /* 矢印 */
+.select-selected:after { 
     content: "";
     position: absolute;
     top: 50%;
@@ -140,7 +138,6 @@ select { /* 標準のselectタグのスタイル */
     transform: translateY(-50%);
     width: 0; height: 0; border: 5px solid transparent;
     border-color: #555 transparent transparent transparent;
-    /* z-index: 3; */ /* ← 削除 */
 }
 
 .select-selected.select-arrow-active:after {
@@ -182,24 +179,27 @@ select { /* 標準のselectタグのスタイル */
 
 /* ======== ナビゲーションエリア ======== */
 .navigation {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.8em; /* 隙間調整 */
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.8em; 
     margin-bottom: 1em;
 }
 
-.navigation button, #go-btn-edition, #go-btn-field, #go-btn-shuffle { /* Goボタンも共通スタイルに */
+.navigation button, #go-btn-edition, #go-btn-field, #go-btn-shuffle, #finish-exam-btn { 
     padding: 0.5em 1em; border: none; background-color: #007bff; color: white;
     border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
-    flex-shrink: 0; /* ボタンが縮まないように */
+    flex-shrink: 0;
 }
+
+#finish-exam-btn { background-color: #e74c3c; } /* 試験終了ボタンは赤系 */
+#finish-exam-btn:hover { background-color: #c0392b; }
 
 .navigation button:disabled { background-color: #ccc; cursor: not-allowed; }
 .navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover, #go-btn-shuffle:hover { background-color: #0056b3; }
-#page-indicator { font-size: 1.1em; font-weight: bold; min-width: 60px; /* 最小幅調整 */ text-align: center; }
-.jump-select { width: 90px; /* 幅調整 */ flex-shrink: 0; }
+#page-indicator { font-size: 1.1em; font-weight: bold; min-width: 60px; text-align: center; }
+.jump-select { width: 90px; flex-shrink: 0; }
 .source-info {
-    font-size: 0.9em; color: #555; font-weight: bold; margin-left: auto; /* 右寄せ */
+    font-size: 0.9em; color: #555; font-weight: bold; margin-left: auto;
     padding: 0.5em; background-color: #e9ecef; border-radius: 4px; display: none;
-    white-space: nowrap; /* 折り返さない */
+    white-space: nowrap;
 }
 
 /* ======== PDF表示エリア ======== */
@@ -212,12 +212,12 @@ select { /* 標準のselectタグのスタイル */
 #welcome-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex;
     flex-direction: column; justify-content: center; align-items: center;
-    background-color: rgba(255, 255, 255, 0.98); text-align: center; padding: 1em; /* padding調整 */
+    background-color: rgba(255, 255, 255, 0.98); text-align: center; padding: 1em;
     box-sizing: border-box; border-radius: 8px; z-index: 10;
 }
 
-#welcome-overlay h2 { margin-top: 0; font-size: 1.2em; /* 文字サイズ調整 */ }
-#welcome-overlay p { font-size: 1em; /* 文字サイズ調整 */ }
+#welcome-overlay h2 { margin-top: 0; font-size: 1.2em; }
+#welcome-overlay p { font-size: 1em; }
 
 
 /* ======== 解答エリア ======== */
@@ -225,7 +225,7 @@ select { /* 標準のselectタグのスタイル */
 .answer-label { font-weight: bold; white-space: nowrap; }
 .answer-buttons { display: flex; gap: 0.5em; }
 .answer-btn {
-    font-size: 1.1em; /* 少し小さく */ width: 40px; height: 40px; /* 少し小さく */ margin: 0; cursor: pointer;
+    font-size: 1.1em; width: 40px; height: 40px; margin: 0; cursor: pointer;
     border: 1px solid #007bff; background-color: #fff; color: #007bff;
     border-radius: 50%; transition: all 0.2s; flex-shrink: 0;
 }
@@ -234,13 +234,16 @@ select { /* 標準のselectタグのスタイル */
 .answer-btn.correct-selection { background-color: #28a745; color: white; border-color: #1e7e34; }
 .answer-btn.incorrect-selection { background-color: #dc3545; color: white; border-color: #bd2130; }
 .answer-btn.correct-answer { border: 3px solid #28a745; font-weight: bold; color: #28a745; }
+.answer-btn.selected-answer-exam { background-color: #007bff; color: white; } /* 試験中の選択色 */
+
 .answer-btn.disabled { cursor: not-allowed; opacity: 0.65; }
-.answer-btn.correct-selection.disabled, .answer-btn.incorrect-selection.disabled { opacity: 1; }
-.answer-btn.disabled:not(.correct-selection):not(.incorrect-selection):not(.correct-answer) { opacity: 0.5; background-color: #e9ecef; border-color: #ced4da; color: #6c757d; }
+.answer-btn.correct-selection.disabled, .answer-btn.incorrect-selection.disabled, .answer-btn.selected-answer-exam.disabled { opacity: 1; }
+.answer-btn.disabled:not(.correct-selection):not(.incorrect-selection):not(.correct-answer):not(.selected-answer-exam) { opacity: 0.5; background-color: #e9ecef; border-color: #ced4da; color: #6c757d; }
 .answer-btn.correct-answer.disabled { opacity: 0.7; }
+
 .result-area {
-    font-size: 1.1em; /* 少し小さく */ font-weight: bold; min-height: 1.5em; padding: 0.5em;
-    flex-grow: 1; text-align: right; white-space: nowrap; /* 結果表示が折り返さないように */
+    font-size: 1.1em; font-weight: bold; min-height: 1.5em; padding: 0.5em;
+    flex-grow: 1; text-align: right; white-space: nowrap;
 }
 
 .correct { color: #28a745; }
@@ -248,30 +251,65 @@ select { /* 標準のselectタグのスタイル */
 
 
 /* ======== スコア・成績ボタン ======== */
-.score-counter { font-weight: bold; font-size: 1em; /* サイズ調整 */ color: #333; white-space: nowrap; }
-.score-correct { font-size: 1.1em; /* サイズ調整 */ color: #007bff; }
+.score-counter { font-weight: bold; font-size: 1em; color: #333; white-space: nowrap; }
+.score-correct { font-size: 1.1em; color: #007bff; }
 .results-btn {
     padding: 0.4em 0.8em; border: 1px solid #6c757d; background-color: #fff; color: #6c757d;
     border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;
-    margin-left: 0.5em; /* 間隔調整 */ white-space: nowrap; flex-shrink: 0;
+    margin-left: 0.5em; white-space: nowrap; flex-shrink: 0;
 }
 
 .results-btn:hover { background-color: #6c757d; color: #fff; }
 
 
 /* ======== 成績パネル ======== */
-#results-panel { margin-top: 1em; padding: 1em; /* padding調整 */ }
-#results-panel h2 { font-size: 1.5em; /* サイズ調整 */ margin-top: 0; text-align: center; color: #333; }
-#results-summary { font-size: 1.1em; /* サイズ調整 */ font-weight: bold; text-align: center; margin-bottom: 1.5em; }
+#results-panel { margin-top: 1em; padding: 1em; }
+#results-panel h2 { font-size: 1.5em; margin-top: 0; text-align: center; color: #333; }
+#results-summary { font-size: 1.1em; font-weight: bold; text-align: center; margin-bottom: 1.5em; }
 #results-list table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-#results-list th, #results-list td { border: 1px solid #ddd; padding: 0.5em; /* padding調整 */ font-size: 0.9em; /* 文字サイズ調整 */ text-align: center; vertical-align: middle; }
+#results-list th, #results-list td { border: 1px solid #ddd; padding: 0.5em; font-size: 0.9em; text-align: center; vertical-align: middle; }
 #results-list th { background-color: #f8f9fa; font-weight: bold; }
 .result-status-correct { color: #28a745; font-weight: bold; }
 .result-status-incorrect { color: #dc3545; font-weight: bold; }
-.review-btn { padding: 0.2em 0.5em; font-size: 0.8em; /* サイズ調整 */ cursor: pointer; border: 1px solid #007bff; background-color: #fff; color: #007bff; border-radius: 4px; }
+.review-btn { padding: 0.2em 0.5em; font-size: 0.8em; cursor: pointer; border: 1px solid #007bff; background-color: #fff; color: #007bff; border-radius: 4px; }
 .review-btn:hover { background-color: #e7f1ff; }
-#back-to-exercise-btn { display: block; margin: 1.5em auto 0; /* 上マージン追加 */ padding: 0.6em 1.2em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; font-size: 1em; /* サイズ調整 */ }
+#back-to-exercise-btn { display: block; margin: 1.5em auto 0; padding: 0.6em 1.2em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; font-size: 1em; }
 #back-to-exercise-btn:hover { background-color: #0056b3; }
+
+
+/* ======== 成績証明書スタイル ======== */
+.certificate {
+    border: 10px solid #d4af37; /* ゴールド */
+    padding: 30px;
+    text-align: center;
+    margin-bottom: 30px;
+    background-color: #fffdf5;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; /* 明朝体っぽく */
+}
+.cert-header {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #d4af37;
+    display: inline-block;
+    padding-bottom: 10px;
+}
+.cert-body { margin-bottom: 30px; }
+.cert-score-area { margin: 20px 0; }
+.cert-score-label { font-size: 1.2em; color: #555; }
+.cert-score-value { font-size: 3em; font-weight: bold; color: #e74c3c; }
+.cert-time-area { font-size: 1.2em; margin-bottom: 20px; color: #333; }
+.cert-grade { font-size: 2.5em; font-weight: bold; margin: 20px 0; }
+.cert-details { margin: 20px auto; max-width: 600px; }
+#cert-details-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+#cert-details-table th { background-color: #f0e6cc; border: 1px solid #d4af37; padding: 5px; }
+#cert-details-table td { border: 1px solid #d4af37; padding: 5px; }
+.cert-o { color: #28a745; font-weight: bold; font-size: 1.2em; }
+.cert-x { color: #dc3545; font-weight: bold; font-size: 1.2em; }
+.cert-date { font-size: 1em; color: #777; margin-top: 20px; }
+.cert-footer { font-size: 1.1em; font-weight: bold; margin-top: 30px; }
 
 
 /* ======== ロード中スピナー ======== */
@@ -284,7 +322,7 @@ select { /* 標準のselectタグのスタイル */
 /* ======== 汎用クラス ======== */
 .hidden { display: none !important; }
 
-/* ======== 難易度バッジ ======== */
+/* ======== 難易度バッジ & タイマー ======== */
 .difficulty-badge {
     display: inline-block;
     padding: 0.3em 0.8em;
@@ -293,12 +331,23 @@ select { /* 標準のselectタグのスタイル */
     color: white;
     font-size: 0.9em;
     margin-left: 10px;
-    background-color: #999; /* デフォルト */
+    background-color: #999;
 }
+.diff-easy { background-color: #28a745; }
+.diff-normal { background-color: #ffc107; color: #333; }
+.diff-hard { background-color: #dc3545; }
 
-.diff-easy { background-color: #28a745; } /* 緑 */
-.diff-normal { background-color: #ffc107; color: #333; } /* 黄 */
-.diff-hard { background-color: #dc3545; } /* 赤 */
+.exam-timer {
+    display: inline-block;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d32f2f; /* 赤色で目立たせる */
+    margin-left: 15px;
+    border: 2px solid #d32f2f;
+    padding: 0 5px;
+    border-radius: 4px;
+    background-color: #fff0f0;
+}
 
 
 /* ======== トグルスイッチエリア ======== */
@@ -314,7 +363,7 @@ select { /* 標準のselectタグのスタイル */
     font-size: 0.9em;
 }
 
-/* ======== フィルターチェックボックスエリア ======== */
+/* ======== フィルター & 科目チェックボックスエリア ======== */
 .filter-group {
     display: flex;
     align-items: center;
@@ -328,24 +377,47 @@ select { /* 標準のselectタグのスタイル */
 .filter-label { margin-right: 2px; }
 .filter-group label { cursor: pointer; display: flex; align-items: center; gap: 2px; }
 
+.subject-checkbox-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    flex-grow: 1;
+}
+.checkbox-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8em;
+}
+.checkbox-grid label { cursor: pointer; font-size: 0.9em; font-weight: bold; }
+
+.exam-notice {
+    font-size: 0.85em; color: #d9534f; margin-top: 5px; margin-bottom: 5px;
+}
+
 
 /* ======== スマホ向け調整 (例: 画面幅600px以下) ======== */
 @media (max-width: 600px) {
     body { padding: 0.5em; }
     h1 { font-size: 1.5em; }
     .control-panel, .navigation, .viewer-container, #results-panel { padding: 0.8em; }
-    .select-group { min-width: calc(50% - 1em); } /* 幅調整 */
-    .custom-select { width: 100%; } /* 幅いっぱいにする */
+    .select-group { min-width: calc(50% - 1em); } 
+    .custom-select { width: 100%; }
     .answer-btn { width: 38px; height: 38px; font-size: 1em; }
-    .actions-row { flex-direction: column; align-items: flex-start; } /* 縦積みに */
+    .actions-row { flex-direction: column; align-items: flex-start; } 
     .score-counter, .results-btn, .result-area { width: 100%; text-align: left; margin-left: 0; }
     .result-area { margin-top: 0.5em; }
     .navigation { gap: 0.5em; }
     .source-info { margin-left: 0; margin-top: 0.5em; width: 100%; text-align: right; }
     #results-list th, #results-list td { padding: 0.4em; font-size: 0.8em; }
-    .difficulty-badge { margin-left: 0; margin-top: 0.5em; display: inline-block; } /* スマホでの表示調整 */
+    .difficulty-badge { margin-left: 0; margin-top: 0.5em; display: inline-block; }
+    .exam-timer { margin-left: 5px; margin-top: 0.5em; }
     
     .top-row { align-items: flex-start; }
     .toggle-group { width: 100%; margin-top: 0.5em; justify-content: flex-end; } 
     .filter-group { width: 100%; border-left: none; padding: 0; margin-top: 0.5em; margin-left: 0; justify-content: flex-start; }
+    .checkbox-grid { gap: 0.5em; }
+    
+    .cert-header { font-size: 1.8em; }
+    .cert-score-value { font-size: 2.2em; }
 }
