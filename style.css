@@ -186,14 +186,14 @@ select { /* 標準のselectタグのスタイル */
     margin-bottom: 1em;
 }
 
-.navigation button, #go-btn-edition, #go-btn-field { /* Goボタンも共通スタイルに */
+.navigation button, #go-btn-edition, #go-btn-field, #go-btn-difficulty { /* Goボタンも共通スタイルに */
     padding: 0.5em 1em; border: none; background-color: #007bff; color: white;
     border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
     flex-shrink: 0; /* ボタンが縮まないように */
 }
 
 .navigation button:disabled { background-color: #ccc; cursor: not-allowed; }
-.navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover { background-color: #0056b3; }
+.navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover, #go-btn-difficulty:hover { background-color: #0056b3; }
 #page-indicator { font-size: 1.1em; font-weight: bold; min-width: 60px; /* 最小幅調整 */ text-align: center; }
 .jump-select { width: 90px; /* 幅調整 */ flex-shrink: 0; }
 .source-info {
@@ -284,6 +284,22 @@ select { /* 標準のselectタグのスタイル */
 /* ======== 汎用クラス ======== */
 .hidden { display: none !important; }
 
+/* ======== 難易度バッジ ======== */
+.difficulty-badge {
+    display: inline-block;
+    padding: 0.3em 0.8em;
+    border-radius: 12px;
+    font-weight: bold;
+    color: white;
+    font-size: 0.9em;
+    margin-left: 10px;
+    background-color: #999; /* デフォルト */
+}
+
+.diff-easy { background-color: #28a745; } /* 緑 */
+.diff-normal { background-color: #ffc107; color: #333; } /* 黄 */
+.diff-hard { background-color: #dc3545; } /* 赤 */
+
 
 /* ======== スマホ向け調整 (例: 画面幅600px以下) ======== */
 @media (max-width: 600px) {
@@ -299,4 +315,5 @@ select { /* 標準のselectタグのスタイル */
     .navigation { gap: 0.5em; }
     .source-info { margin-left: 0; margin-top: 0.5em; width: 100%; text-align: right; }
     #results-list th, #results-list td { padding: 0.4em; font-size: 0.8em; }
+    .difficulty-badge { margin-left: 0; margin-top: 0.5em; display: inline-block; } /* スマホでの表示調整 */
 }
