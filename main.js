@@ -13,10 +13,10 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, finishExamBtn,
     difficultyToggles, difficultyBadge, examTimerSpan,
-    filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes, // 変更
+    filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
-    certificateContainer, certScoreNum, certTimeValue, certDetailsTableBody, certDate;
+    certificateContainer, certImageContainer, certScoreNum, certTimeValue, certDetailsTableBody, certDate;
 
 // 解説機能用の変数
 let btnExplanationEdition, btnExplanationField, btnExplanationShuffle, explanationModal, explanationBody, explanationTitle, closeModalSpan;
@@ -34,9 +34,11 @@ let correctCount = 0;
 let answerHistory = {};
 let currentSessionQuestions = [];
 
-let isExamMode = false; // 試験モードフラグ
+let isExamMode = false; // シャッフル演習モードフラグ
 let examStartTime = 0;
+let examElapsedTime = 0; 
 let examTimerInterval = null;
+let isTimerRunning = false;
 
 /** ローディング表示を制御 */
 function showLoading(show) {
@@ -137,28 +139,23 @@ async function loadExplanations(edition) {
     }
 }
 
-/** 難易度フィルター判定 (通常演習用) */
+/** 難易度フィルター判定 */
 function isDifficultyAllowed(questionId) {
     const allowed = new Set();
     filterCheckboxes.forEach(cb => {
         if (cb.checked) allowed.add(cb.value);
     });
 
-    // A, B, C 全てにチェックが入っているか確認
     const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
-
     const difficulty = difficultyMap[questionId];
     
-    // 難易度指定がない場合: 全てチェックされている時のみ許可
     if (!difficulty) {
         return isAllChecked;
     }
-    
-    // 指定がある場合: チェックボックスに含まれているか
     return allowed.has(difficulty);
 }
 
-/** リストの難易度フィルタリング (通常演習用) */
+/** リストの難易度フィルタリング */
 function filterQuestionsByDifficulty(questions, defaultSubject = '') {
     return questions.filter(q => {
         const subject = q.subject || defaultSubject;
@@ -180,29 +177,47 @@ function shuffleArray(array) {
 function updateTimer() {
     if (!examTimerSpan) return;
     const now = Date.now();
-    const diff = Math.floor((now - examStartTime) / 1000);
+    const diff = Math.floor((now - examStartTime + examElapsedTime) / 1000);
     const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
     const seconds = (diff % 60).toString().padStart(2, '0');
     examTimerSpan.textContent = `${minutes}:${seconds}`;
 }
 
-/** タイマー開始 */
+/** タイマー開始 (再開) */
 function startTimer() {
-    if (examTimerInterval) clearInterval(examTimerInterval);
+    if (isTimerRunning) return; 
     examStartTime = Date.now();
-    updateTimer();
     if(examTimerSpan) examTimerSpan.classList.remove('hidden');
+    updateTimer(); 
     examTimerInterval = setInterval(updateTimer, 1000);
+    isTimerRunning = true;
 }
 
-/** タイマー停止 */
+/** タイマー一時停止 */
 function stopTimer() {
+    if (!isTimerRunning) return;
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
-    if (!examTimerSpan) return "--:--";
-    return examTimerSpan.textContent;
+    examElapsedTime += Date.now() - examStartTime;
+    isTimerRunning = false;
+    updateTimer();
+}
+
+/** タイマーリセット */
+function resetTimer() {
+    stopTimer();
+    examElapsedTime = 0;
+    if (examTimerSpan) examTimerSpan.textContent = "00:00";
+}
+
+/** 最終時間取得文字列 */
+function getFinalTimeStr() {
+    const diff = Math.floor(examElapsedTime / 1000);
+    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+    const seconds = (diff % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
 }
 
 /** PDF描画 */
@@ -307,9 +322,6 @@ async function renderPageInternal(pdfPageNum) {
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
         }
 
-        // 【修正】表紙をスキップするために +1 ページする (PDF.jsは1-based index)
-        // pdfPageNumは「問番号」として渡ってくる(1, 2, 3...)。
-        // 表紙がある場合、問1は2ページ目にあるので +1 する。
         const pageObj = await pdfDoc.getPage(pdfPageNum + 1); 
         
         const viewport = pageObj.getViewport({ scale: 1.8 });
@@ -360,24 +372,17 @@ async function renderPageInternal(pdfPageNum) {
                 const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${history.selected}"]`);
                 const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
 
-                if (isExamMode) {
-                    if (selectedButton) {
-                        selectedButton.classList.add('selected-answer-exam');
-                    }
-                    activeResultArea.textContent = '解答済み';
+                if (history.correct) {
+                    if(selectedButton) selectedButton.classList.add('correct-selection');
+                    activeResultArea.textContent = `正解！ 🎉`;
+                    activeResultArea.className = 'result-area correct';
                 } else {
-                    if (history.correct) {
-                        if(selectedButton) selectedButton.classList.add('correct-selection');
-                        activeResultArea.textContent = `正解！ 🎉`;
-                        activeResultArea.className = 'result-area correct';
-                    } else {
-                        if(selectedButton) selectedButton.classList.add('incorrect-selection');
-                        if(correctButton) correctButton.classList.add('correct-answer');
-                        activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
-                        activeResultArea.className = 'result-area incorrect';
-                    }
-                    if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
+                    if(selectedButton) selectedButton.classList.add('incorrect-selection');
+                    if(correctButton) correctButton.classList.add('correct-answer');
+                    activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
+                    activeResultArea.className = 'result-area incorrect';
                 }
+                if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
                 
                 activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
             }
@@ -439,9 +444,8 @@ async function displayFieldQuestion(index) {
     const question = currentFieldQuestions[index];
     
     await loadAnswersForEdition(question.edition);
-    if (!isExamMode) {
-        await loadExplanations(question.edition);
-    }
+    // 全モードで解説をロード
+    await loadExplanations(question.edition);
 
     const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
     await renderPdf(question.edition, subject, parseInt(question.pageNum, 10));
@@ -499,28 +503,28 @@ function checkAnswer(selectedChoice) {
         return;
     }
 
+    // 解答したらタイマー停止
+    if (isExamMode) {
+        stopTimer();
+    }
+
     const isCorrect = parseInt(selectedChoice, 10) === correctAnswer;
     answerHistory[questionId] = { selected: selectedChoice, correct: isCorrect, correctAnswer: correctAnswer };
 
     const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${selectedChoice}"]`);
     const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${correctAnswer}"]`);
 
-    if (isExamMode) {
-        if (isCorrect) correctCount++;
-        if (selectedButton) selectedButton.classList.add('selected-answer-exam');
-        resultArea.textContent = '解答済み';
+    // 即時正誤表示
+    if (isCorrect) {
+        correctCount++; updateScoreDisplay();
+        resultArea.textContent = `正解！ 🎉`; resultArea.className = 'result-area correct';
+        if (selectedButton) selectedButton.classList.add('correct-selection');
     } else {
-        if (isCorrect) {
-            correctCount++; updateScoreDisplay();
-            resultArea.textContent = `正解！ 🎉`; resultArea.className = 'result-area correct';
-            if (selectedButton) selectedButton.classList.add('correct-selection');
-        } else {
-            resultArea.textContent = `不正解... (正解は ${correctAnswer}) ❌`; resultArea.className = 'result-area incorrect';
-            if (selectedButton) selectedButton.classList.add('incorrect-selection');
-            if (correctButton) correctButton.classList.add('correct-answer');
-        }
-        if(explanationBtn) explanationBtn.classList.remove('hidden');
+        resultArea.textContent = `不正解... (正解は ${correctAnswer}) ❌`; resultArea.className = 'result-area incorrect';
+        if (selectedButton) selectedButton.classList.add('incorrect-selection');
+        if (correctButton) correctButton.classList.add('correct-answer');
     }
+    if(explanationBtn) explanationBtn.classList.remove('hidden');
 
     activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
 }
@@ -539,7 +543,8 @@ function showResults() {
     
     let finalTime = "--:--";
     if (isExamMode) {
-        finalTime = stopTimer();
+        stopTimer();
+        finalTime = getFinalTimeStr();
         isExamMode = false;
         if(examTimerSpan) examTimerSpan.classList.add('hidden');
         if(certificateContainer) certificateContainer.classList.remove('hidden');
@@ -602,7 +607,9 @@ function showResults() {
     const accuracy = totalQuestions > 0 ? ((sessionCorrectCount / totalQuestions) * 100).toFixed(1) : 0;
     resultsSummary.innerHTML = `総問題数: ${totalQuestions}問 / 解答済み: ${answeredCount}問<br>正答数: ${sessionCorrectCount}問 / 正答率: ${accuracy}%`;
 
+    // 証明書生成・画像化
     if (certificateContainer && !certificateContainer.classList.contains('hidden')) {
+        // テキスト更新
         if(certScoreNum) certScoreNum.textContent = sessionCorrectCount;
         if(certTimeValue) certTimeValue.textContent = finalTime;
         
@@ -619,6 +626,35 @@ function showResults() {
             const d = new Date();
             certDate.textContent = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
         }
+
+        // html2canvasで画像化して表示
+        if (certImageContainer) {
+            certImageContainer.innerHTML = ''; // クリア
+            // html2canvas実行前にDOMが表示されている必要がある
+            
+            // 少し待ってから実行（DOMレンダリング待ち）
+            setTimeout(() => {
+                html2canvas(certificateContainer, {
+                    scale: 2, 
+                    backgroundColor: "#fffdf5"
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL("image/png");
+                    const img = document.createElement('img');
+                    img.src = imgData;
+                    img.style.maxWidth = '100%';
+                    img.style.boxShadow = '0 4px 10px rgba(0,0,0,0.1)';
+                    
+                    // オリジナルDOMを隠す
+                    certificateContainer.classList.add('hidden');
+                    
+                    // 画像を表示
+                    certImageContainer.classList.remove('hidden');
+                    certImageContainer.appendChild(img);
+                });
+            }, 100);
+        }
+    } else {
+        if(certImageContainer) certImageContainer.classList.add('hidden');
     }
     
     document.querySelectorAll('.review-btn').forEach(button => {
@@ -638,62 +674,6 @@ function showResults() {
             displayFieldQuestion(index);
         });
     });
-}
-
-/** 解説を表示する関数 */
-function showExplanationModal() {
-    let subjectKey = "";
-    let pageNum = "";
-    let edition = "";
-
-    const q = currentFieldQuestions[currentFieldIndex];
-    if (q) {
-        subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
-        pageNum = q.pageNum;
-        edition = q.edition;
-    } else {
-        return;
-    }
-
-    const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
-    let displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
-
-    const mathBlocks = [];
-    displayText = displayText.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g, (match) => {
-        mathBlocks.push(match);
-        return `MATHBLOCK${mathBlocks.length - 1}END`;
-    });
-
-    if (typeof marked !== 'undefined') {
-        explanationBody.innerHTML = marked.parse(displayText);
-    } else {
-        explanationBody.textContent = displayText;
-    }
-
-    explanationBody.innerHTML = explanationBody.innerHTML.replace(/MATHBLOCK(\d+)END/g, (match, index) => {
-        return mathBlocks[index];
-    });
-
-    if (typeof renderMathInElement !== 'undefined') {
-        renderMathInElement(explanationBody, {
-            delimiters: [
-                {left: "$$", right: "$$", display: true},
-                {left: "$", right: "$", display: false}
-            ],
-            throwOnError: false
-        });
-    }
-
-    explanationTitle.textContent = `解説 (第${edition}回 問${pageNum})`;
-    explanationModal.style.display = 'block';
-}
-
-/** ナビボタン更新 */
-function updateNavButtons() {
-    if (!prevBtn || !nextBtn || !jumpToSelect) return;
-    prevBtn.disabled = (currentFieldIndex <= 0);
-    nextBtn.disabled = (currentFieldIndex >= currentFieldQuestions.length - 1) && !isExamMode; 
-    jumpToSelect.disabled = false;
 }
 
 /** カスタムセレクトを閉じる */
@@ -819,7 +799,7 @@ function setupEventListeners() {
 
         // 全問題（fieldsData由来）からフィルタリング
         let candidates = [];
-        const seenIds = new Set(); // 重複防止用
+        const seenIds = new Set();
 
         targetSubjects.forEach(subjKey => {
             const fieldList = fieldsData[subjKey];
@@ -829,17 +809,12 @@ function setupEventListeners() {
                         const subject = subjKey;
                         const id = getQuestionId(q.edition, subject, q.pageNum);
                         
-                        // 重複チェック
                         if (!seenIds.has(id)) {
-                            // 難易度チェック (独立したロジック)
                             const diff = difficultyMap[id];
-                            
                             let isMatch = false;
                             if (!diff) {
-                                // 難易度なし: 'none'がチェックされていればOK
                                 if (allowedDiff.has('none')) isMatch = true;
                             } else {
-                                // 難易度あり: A,B,Cの該当チェックがあればOK
                                 if (allowedDiff.has(diff)) isMatch = true;
                             }
 
@@ -865,10 +840,13 @@ function setupEventListeners() {
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
         populateJumpSelector(currentFieldQuestions);
         
-        // 試験モード開始設定
+        // 試験モード開始
         isExamMode = true;
-        if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.add('hidden'); // スコア隠す
+        resetTimer();
         startTimer();
+        
+        // スコア・解説表示は通常通り（正誤判定即時）
+        if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
 
         showLoading(true);
         currentFieldIndex = 0;
@@ -876,10 +854,8 @@ function setupEventListeners() {
         showLoading(false);
     });
 
-    // 試験終了ボタン
     if (finishExamBtn) finishExamBtn.addEventListener('click', finishExam);
 
-    // 難易度トグル同期
     if (difficultyToggles.length > 0) {
         difficultyToggles.forEach(toggle => {
             toggle.addEventListener('change', (e) => {
@@ -891,7 +867,6 @@ function setupEventListeners() {
         });
     }
 
-    // フィルターチェックボックス同期 (通常演習用のみ同期)
     if (filterCheckboxes.length > 0) {
         filterCheckboxes.forEach(cb => {
             cb.addEventListener('change', (e) => {
@@ -917,7 +892,12 @@ function setupEventListeners() {
     if (nextBtn) nextBtn.addEventListener('click', () => {
         if (currentFieldIndex < currentFieldQuestions.length - 1) { 
             currentFieldIndex++; 
-            displayFieldQuestion(currentFieldIndex); 
+            displayFieldQuestion(currentFieldIndex);
+            
+            // 次の問題へ進んだらタイマー再開
+            if (isExamMode) {
+                startTimer();
+            }
         }
     });
 
@@ -1018,7 +998,7 @@ async function initialize() {
     difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
     filterCheckboxes = document.querySelectorAll('.diff-filter-cb');
     shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb'); 
-    shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb'); // 追加
+    shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb'); 
     difficultyBadge = document.getElementById('difficulty-badge');
     examTimerSpan = document.getElementById('exam-timer'); 
 
@@ -1029,6 +1009,7 @@ async function initialize() {
 
     // 証明書要素
     certificateContainer = document.getElementById('certificate-container');
+    certImageContainer = document.getElementById('cert-image-container'); // 追加
     certScoreNum = document.getElementById('cert-score-num');
     certTimeValue = document.getElementById('cert-time-value');
     certDetailsTableBody = document.querySelector('#cert-details-table tbody');
