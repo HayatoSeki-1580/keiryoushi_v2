@@ -5,13 +5,13 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
 // --- グローバル変数 ---
 let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     pageNumSpan, pageCountSpan, prevBtn, nextBtn, jumpToSelect,
-    tabByEdition, tabByField, tabShuffle, // 変更
-    panelByEdition, panelByField, panelShuffle, // 変更
+    tabByEdition, tabByField, tabShuffle,
+    panelByEdition, panelByField, panelShuffle,
     editionSelect, subjectSelectEdition, goBtnEdition, resultAreaEdition, scoreCorrectEdition, showResultsBtnEdition,
     subjectSelectField,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
-    subjectSelectShuffle, goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, // 変更
+    subjectSelectShuffle, goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle,
     difficultyToggles, difficultyBadge,
     filterCheckboxes,
     answerButtonsNodeList,
@@ -206,7 +206,7 @@ function populateJumpSelector(questions) {
     }
 }
 
-/** 難易度表示の更新 */
+/** 難易度表示の更新 (修正版) */
 function updateDifficultyDisplay(questionId) {
     const isVisible = difficultyToggles.length > 0 && difficultyToggles[0].checked;
     
@@ -215,14 +215,19 @@ function updateDifficultyDisplay(questionId) {
     const difficulty = difficultyMap[questionId];
 
     if (isVisible && difficulty) {
-        difficultyBadge.textContent = `難易度: ${difficulty}`;
+        // 【修正】難易度記号を表示用テキストに変換
+        let displayText = difficulty;
+        let colorClass = 'diff-normal';
+
+        if (difficulty === 'A') { displayText = "A(易)"; colorClass = 'diff-easy'; }
+        else if (difficulty === 'B') { displayText = "B(普)"; colorClass = 'diff-normal'; }
+        else if (difficulty === 'C') { displayText = "C(難)"; colorClass = 'diff-hard'; }
+
+        difficultyBadge.textContent = `難易度: ${displayText}`;
         difficultyBadge.classList.remove('hidden');
         
         difficultyBadge.className = 'difficulty-badge'; 
-        if (difficulty === 'A') difficultyBadge.classList.add('diff-easy');
-        else if (difficulty === 'B') difficultyBadge.classList.add('diff-normal');
-        else if (difficulty === 'C') difficultyBadge.classList.add('diff-hard');
-        else difficultyBadge.classList.add('diff-normal');
+        difficultyBadge.classList.add(colorClass);
         
     } else {
         difficultyBadge.classList.add('hidden');
@@ -655,8 +660,6 @@ function setupEventListeners() {
         // difficultyDataから全問題を取得し、難易度と科目でフィルタリング
         let tempQuestions = [];
         
-        // difficultyData構造: [ {value:'A', questions:[...]}, {value:'B',...} ]
-        // フィルターで許可されている難易度のリストだけ結合する
         const allowed = new Set();
         filterCheckboxes.forEach(cb => { if (cb.checked) allowed.add(cb.value); });
 
@@ -790,12 +793,12 @@ async function initialize() {
     // タブ
     tabByEdition = document.getElementById('tab-by-edition');
     tabByField = document.getElementById('tab-by-field');
-    tabShuffle = document.getElementById('tab-shuffle'); // 変更
+    tabShuffle = document.getElementById('tab-shuffle'); 
 
     // パネル
     panelByEdition = document.getElementById('panel-by-edition');
     panelByField = document.getElementById('panel-by-field');
-    panelShuffle = document.getElementById('panel-shuffle'); // 変更
+    panelShuffle = document.getElementById('panel-shuffle'); 
 
     // 回数別
     editionSelect = document.getElementById('edition-select');
@@ -815,7 +818,7 @@ async function initialize() {
     scoreCorrectField = panelByField ? panelByField.querySelector('.score-correct') : null;
     showResultsBtnField = document.getElementById('show-results-btn-field');
     
-    // シャッフル演習 (変更)
+    // シャッフル演習
     subjectSelectShuffle = document.getElementById('subject-select-shuffle');
     goBtnShuffle = document.getElementById('go-btn-shuffle');
     resultAreaShuffle = document.getElementById('result-area-shuffle');
