@@ -80,7 +80,7 @@
         <div class="mode-tabs">
             <button id="tab-by-edition" class="tab-btn active">回数別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
-            <button id="tab-by-difficulty" class="tab-btn">難易度別演習</button>
+            <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
         </div>
 
         <div id="panel-by-edition" class="control-panel">
@@ -194,12 +194,20 @@
             </div>
         </div>
 
-        <div id="panel-by-difficulty" class="control-panel hidden">
+        <div id="panel-shuffle" class="control-panel hidden">
             <div class="top-row">
                 <div class="select-group">
-                    <label for="difficulty-select">難易度:</label>
-                    <select id="difficulty-select">
-                        <option value="">選択してください...</option>
+                    <label for="subject-select-shuffle">科目:</label>
+                    <select id="subject-select-shuffle">
+                        <option value="all">全科目</option>
+                        <option value="kanka">環化</option>
+                        <option value="kanbutsu">環物</option>
+                        <option value="kannou">環濃</option>
+                        <option value="kanon">環音</option>
+                        <option value="houki">法規</option>
+                        <option value="kanri">管理</option>
+                        <option value="ichiki">一基</option>
+                        <option value="keishitsu">計質</option>
                     </select>
                 </div>
 
@@ -210,11 +218,11 @@
                     <label><input type="checkbox" value="C" checked class="diff-filter-cb">C</label>
                 </div>
 
-                <button id="go-btn-difficulty">表示</button>
+                <button id="go-btn-shuffle">シャッフル出題</button>
                 
                 <div class="toggle-group">
-                     <label for="toggle-diff-difficulty">難易度を表示</label>
-                     <input type="checkbox" id="toggle-diff-difficulty" class="difficulty-toggle-checkbox">
+                     <label for="toggle-diff-shuffle">難易度を表示</label>
+                     <input type="checkbox" id="toggle-diff-shuffle" class="difficulty-toggle-checkbox">
                 </div>
             </div>
             <div class="actions-row">
@@ -228,12 +236,12 @@
                        <button class="answer-btn" data-choice="5">5</button>
                    </div>
                </div>
-               <div id="score-counter-difficulty" class="score-counter">
+               <div id="score-counter-shuffle" class="score-counter">
                    正答数: <span class="score-correct">0</span>
                </div>
-               <button id="show-results-btn-difficulty" class="results-btn">成績を見る</button>
-               <button id="btn-explanation-difficulty" class="explanation-btn hidden">解説を見る</button>
-               <div id="result-area-difficulty" class="result-area"></div>
+               <button id="show-results-btn-shuffle" class="results-btn">成績を見る</button>
+               <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
+               <div id="result-area-shuffle" class="result-area"></div>
            </div>
        </div>
 
