@@ -186,14 +186,14 @@ select { /* 標準のselectタグのスタイル */
     margin-bottom: 1em;
 }
 
-.navigation button, #go-btn-edition, #go-btn-field, #go-btn-difficulty { /* Goボタンも共通スタイルに */
+.navigation button, #go-btn-edition, #go-btn-field, #go-btn-shuffle { /* Goボタンも共通スタイルに */
     padding: 0.5em 1em; border: none; background-color: #007bff; color: white;
     border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
     flex-shrink: 0; /* ボタンが縮まないように */
 }
 
 .navigation button:disabled { background-color: #ccc; cursor: not-allowed; }
-.navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover, #go-btn-difficulty:hover { background-color: #0056b3; }
+.navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover, #go-btn-shuffle:hover { background-color: #0056b3; }
 #page-indicator { font-size: 1.1em; font-weight: bold; min-width: 60px; /* 最小幅調整 */ text-align: center; }
 .jump-select { width: 90px; /* 幅調整 */ flex-shrink: 0; }
 .source-info {
@@ -314,7 +314,7 @@ select { /* 標準のselectタグのスタイル */
     font-size: 0.9em;
 }
 
-/* ======== フィルターチェックボックスエリア (追加) ======== */
+/* ======== フィルターチェックボックスエリア ======== */
 .filter-group {
     display: flex;
     align-items: center;
