@@ -78,9 +78,9 @@
     <div id="exercise-view">
 
         <div class="mode-tabs">
-            <button id="tab-by-edition" class="tab-btn active">回数別演習</button>
+            <button id="tab-by-edition" class="tab-btn active">年度別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
-            <button id="tab-shuffle" class="tab-btn">模擬試験 (5問)</button>
+            <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
         </div>
 
         <div id="panel-by-edition" class="control-panel">
@@ -199,25 +199,26 @@
                 <div class="subject-checkbox-container">
                     <span class="filter-label">出題科目:</span>
                     <div class="checkbox-grid">
-                        <label><input type="checkbox" value="kanka" checked class="shuffle-subject-cb">環化</label>
-                        <label><input type="checkbox" value="kanbutsu" checked class="shuffle-subject-cb">環物</label>
-                        <label><input type="checkbox" value="kannou" checked class="shuffle-subject-cb">環濃</label>
-                        <label><input type="checkbox" value="kanon" checked class="shuffle-subject-cb">環音</label>
-                        <label><input type="checkbox" value="houki" checked class="shuffle-subject-cb">法規</label>
-                        <label><input type="checkbox" value="kanri" checked class="shuffle-subject-cb">管理</label>
-                        <label><input type="checkbox" value="ichiki" checked class="shuffle-subject-cb">一基</label>
-                        <label><input type="checkbox" value="keishitsu" checked class="shuffle-subject-cb">計質</label>
+                        <label><input type="checkbox" value="kanka" class="shuffle-subject-cb">環化</label>
+                        <label><input type="checkbox" value="kanbutsu" class="shuffle-subject-cb">環物</label>
+                        <label><input type="checkbox" value="kannou" class="shuffle-subject-cb">環濃</label>
+                        <label><input type="checkbox" value="kanon" class="shuffle-subject-cb">環音</label>
+                        <label><input type="checkbox" value="houki" class="shuffle-subject-cb">法規</label>
+                        <label><input type="checkbox" value="kanri" class="shuffle-subject-cb">管理</label>
+                        <label><input type="checkbox" value="ichiki" class="shuffle-subject-cb">一基</label>
+                        <label><input type="checkbox" value="keishitsu" class="shuffle-subject-cb">計質</label>
                     </div>
                 </div>
 
                  <div class="filter-group">
                     <span class="filter-label">難易度:</span>
-                    <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
-                    <label><input type="checkbox" value="B" checked class="diff-filter-cb">B(普)</label>
-                    <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
+                    <label><input type="checkbox" value="A" class="shuffle-diff-cb">A(易)</label>
+                    <label><input type="checkbox" value="B" class="shuffle-diff-cb">B(普)</label>
+                    <label><input type="checkbox" value="C" class="shuffle-diff-cb">C(難)</label>
+                    <label><input type="checkbox" value="none" class="shuffle-diff-cb">指定なし</label>
                 </div>
 
-                <button id="go-btn-shuffle" class="exam-start-btn">試験開始 (5問)</button>
+                <button id="go-btn-shuffle" class="exam-start-btn">演習開始 (5問)</button>
             </div>
             
             <div class="exam-notice">※試験モードでは解答時の正誤表示や解説は非表示になります。</div>
