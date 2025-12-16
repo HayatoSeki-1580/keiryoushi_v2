@@ -301,7 +301,7 @@ select { /* 標準のselectタグのスタイル */
 .diff-hard { background-color: #dc3545; } /* 赤 */
 
 
-/* ======== トグルスイッチエリア (追加) ======== */
+/* ======== トグルスイッチエリア ======== */
 .toggle-group {
     margin-left: auto;
     display: flex;
@@ -313,6 +313,20 @@ select { /* 標準のselectタグのスタイル */
     font-weight: bold;
     font-size: 0.9em;
 }
+
+/* ======== フィルターチェックボックスエリア (追加) ======== */
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-left: 10px;
+    font-weight: bold;
+    font-size: 0.9em;
+    padding: 0 10px;
+    border-left: 1px solid #ccc;
+}
+.filter-label { margin-right: 2px; }
+.filter-group label { cursor: pointer; display: flex; align-items: center; gap: 2px; }
 
 
 /* ======== スマホ向け調整 (例: 画面幅600px以下) ======== */
@@ -330,5 +344,8 @@ select { /* 標準のselectタグのスタイル */
     .source-info { margin-left: 0; margin-top: 0.5em; width: 100%; text-align: right; }
     #results-list th, #results-list td { padding: 0.4em; font-size: 0.8em; }
     .difficulty-badge { margin-left: 0; margin-top: 0.5em; display: inline-block; } /* スマホでの表示調整 */
-    .toggle-group { width: 100%; margin-top: 0.5em; justify-content: flex-end; } /* スマホでは右寄せ */
+    
+    .top-row { align-items: flex-start; }
+    .toggle-group { width: 100%; margin-top: 0.5em; justify-content: flex-end; } 
+    .filter-group { width: 100%; border-left: none; padding: 0; margin-top: 0.5em; margin-left: 0; justify-content: flex-start; }
 }
