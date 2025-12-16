@@ -218,7 +218,7 @@
                     <label><input type="checkbox" value="A" class="shuffle-diff-cb">A(易)</label>
                     <label><input type="checkbox" value="B" class="shuffle-diff-cb">B(普)</label>
                     <label><input type="checkbox" value="C" class="shuffle-diff-cb">C(難)</label>
-                    <label><input type="checkbox" value="none" class="shuffle-diff-cb">指定なし</label>
+                    <label><input type="checkbox" value="none" checked class="shuffle-diff-cb">指定なし</label>
                 </div>
 
                 <button id="go-btn-shuffle" class="exam-start-btn">演習開始 (5問)</button>
@@ -283,6 +283,13 @@
             <div class="cert-header">成績証明書</div>
             <div class="cert-body">
                 <p>あなたは計量士国家試験 演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
+                
+                <div class="cert-meta">
+                    <div class="cert-meta-row"><span class="cert-label">実施日:</span> <span id="cert-date"></span></div>
+                    <div class="cert-meta-row"><span class="cert-label">科目:</span> <span id="cert-subjects"></span></div>
+                    <div class="cert-meta-row"><span class="cert-label">難易度:</span> <span id="cert-difficulties"></span></div>
+                </div>
+
                 <div class="cert-score-area">
                     <div class="cert-score-label">スコア</div>
                     <div class="cert-score-value">
@@ -298,15 +305,15 @@
                         <thead>
                             <tr>
                                 <th>No.</th>
-                                <th>出題元</th>
+                                <th>科目</th>
+                                <th>年度</th>
+                                <th>問</th>
                                 <th>結果</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
-
-                <div class="cert-date" id="cert-date"></div>
             </div>
             <div class="cert-footer">計量士委員会</div>
         </div>
