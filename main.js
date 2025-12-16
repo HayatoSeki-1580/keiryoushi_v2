@@ -16,7 +16,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
-    certificateContainer, certImageContainer, certScoreNum, certTimeValue, certDetailsTableBody, certDate;
+    certificateContainer, certImageContainer, certScoreNum, certTimeValue, certDetailsTableBody, certDate, certSubjects, certDifficulties;
 
 // 解説機能用の変数
 let btnExplanationEdition, btnExplanationField, btnExplanationShuffle, explanationModal, explanationBody, explanationTitle, closeModalSpan;
@@ -39,6 +39,16 @@ let examStartTime = 0;
 let examElapsedTime = 0; 
 let examTimerInterval = null;
 let isTimerRunning = false;
+
+// 試験設定保存用
+let examSelectedSubjectsText = "";
+let examSelectedDiffText = "";
+
+// 日本語マッピング
+const subjectMap = {
+    kanka: "環化", kanbutsu: "環物", kannou: "環濃", kanon: "環音",
+    houki: "法規", kanri: "管理", ichiki: "一基", keishitsu: "計質"
+};
 
 /** ローディング表示を制御 */
 function showLoading(show) {
@@ -142,19 +152,17 @@ async function loadExplanations(edition) {
 /** 難易度フィルター判定 */
 function isDifficultyAllowed(questionId) {
     const allowed = new Set();
-    // モードによって対象のチェックボックスを変えるべきだが、
-    // ここではグローバルなfilterCheckboxes（通常モード用）を参照する標準関数
     filterCheckboxes.forEach(cb => {
         if (cb.checked) allowed.add(cb.value);
     });
 
+    const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
     const difficulty = difficultyMap[questionId];
     
-    // 難易度未定義の場合、'none' が許可されていればOK
+    // 指定なし(none)が許可されているか
     if (!difficulty) {
-        return allowed.has('none');
+        return allowed.has('none') || isAllChecked;
     }
-    // 難易度定義ありの場合
     return allowed.has(difficulty);
 }
 
@@ -183,6 +191,7 @@ function updateTimer() {
     let totalSeconds = 0;
     if (isTimerRunning) {
         const now = Date.now();
+        // 現在のセッションの経過時間 + 過去の蓄積時間
         const currentSession = now - examStartTime;
         totalSeconds = Math.floor((examElapsedTime + currentSession) / 1000);
     } else {
@@ -204,7 +213,7 @@ function startTimer() {
     examTimerInterval = setInterval(updateTimer, 1000);
 }
 
-/** タイマー停止 */
+/** タイマー一時停止 */
 function stopTimer() {
     if (!isTimerRunning) return;
     
@@ -212,6 +221,7 @@ function stopTimer() {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
+    // 時間を確定して蓄積
     examElapsedTime += Date.now() - examStartTime;
     isTimerRunning = false;
     updateTimer(); 
@@ -338,7 +348,6 @@ async function renderPageInternal(pdfPageNum) {
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
         }
 
-        // 表紙スキップ (+1)
         const pageObj = await pdfDoc.getPage(pdfPageNum + 1); 
         
         const viewport = pageObj.getViewport({ scale: 1.8 });
@@ -385,8 +394,7 @@ async function renderPageInternal(pdfPageNum) {
             if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
             if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
 
-            // 未解答かつ試験モードならタイマーをスタート
-            // ページ表示完了時 = 問題を見始めたとみなす
+            // 未解答かつ試験モードならタイマーをスタート（再開）
             if (isExamMode && !history) {
                 startTimer();
             }
@@ -626,7 +634,9 @@ function showResults() {
 
             certDetails.push({
                 no: index + 1,
-                source: questionNumDisplay,
+                subject: subjectMap[subject] || subject,
+                edition: `第${qInfo.edition}回`,
+                question: `問${qInfo.pageNum}`,
                 result: isCorrect ? '○' : '×',
                 resultClass: isCorrect ? 'cert-o' : 'cert-x'
             });
@@ -641,12 +651,14 @@ function showResults() {
     if (certificateContainer && !certificateContainer.classList.contains('hidden')) {
         if(certScoreNum) certScoreNum.textContent = sessionCorrectCount;
         if(certTimeValue) certTimeValue.textContent = finalTime;
+        if(certSubjects) certSubjects.textContent = examSelectedSubjectsText;
+        if(certDifficulties) certDifficulties.textContent = examSelectedDiffText;
         
         if(certDetailsTableBody) {
             certDetailsTableBody.innerHTML = '';
             certDetails.forEach(d => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d.no}</td><td>${d.source}</td><td class="${d.resultClass}">${d.result}</td>`;
+                tr.innerHTML = `<td>${d.no}</td><td>${d.subject}</td><td>${d.edition}</td><td>${d.question}</td><td class="${d.resultClass}">${d.result}</td>`;
                 certDetailsTableBody.appendChild(tr);
             });
         }
@@ -801,8 +813,12 @@ function setupEventListeners() {
         correctCount = 0; updateScoreDisplay(); answerHistory = {};
         
         const targetSubjects = new Set();
+        const selectedSubjectsTexts = [];
         shuffleSubjectCheckboxes.forEach(cb => {
-            if (cb.checked) targetSubjects.add(cb.value);
+            if (cb.checked) {
+                targetSubjects.add(cb.value);
+                selectedSubjectsTexts.push(cb.parentNode.textContent.trim());
+            }
         });
         
         if (targetSubjects.size === 0) {
@@ -810,11 +826,21 @@ function setupEventListeners() {
         }
 
         const allowedDiff = new Set();
-        shuffleDiffCheckboxes.forEach(cb => { if (cb.checked) allowedDiff.add(cb.value); });
+        const selectedDiffTexts = [];
+        shuffleDiffCheckboxes.forEach(cb => { 
+            if (cb.checked) {
+                allowedDiff.add(cb.value);
+                selectedDiffTexts.push(cb.parentNode.textContent.trim());
+            }
+        });
 
         if (allowedDiff.size === 0) {
             alert("難易度を少なくとも1つ選択してください。"); return;
         }
+
+        // 選択情報を保存
+        examSelectedSubjectsText = selectedSubjectsTexts.join(", ");
+        examSelectedDiffText = selectedDiffTexts.join(", ");
 
         let candidates = [];
         const seenIds = new Set();
@@ -860,9 +886,7 @@ function setupEventListeners() {
         // 試験モード開始
         isExamMode = true;
         resetTimer();
-        // ここではstartTimerせず、問題描画完了時に開始する
         
-        // スコア表示も出す
         if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
 
         showLoading(true);
@@ -910,7 +934,6 @@ function setupEventListeners() {
         if (currentFieldIndex < currentFieldQuestions.length - 1) { 
             currentFieldIndex++; 
             displayFieldQuestion(currentFieldIndex);
-            // 次の問題へ移動時は描画完了時にタイマー再開
         }
     });
 
@@ -1025,6 +1048,8 @@ async function initialize() {
     certImageContainer = document.getElementById('cert-image-container'); 
     certScoreNum = document.getElementById('cert-score-num');
     certTimeValue = document.getElementById('cert-time-value');
+    certSubjects = document.getElementById('cert-subjects');
+    certDifficulties = document.getElementById('cert-difficulties');
     certDetailsTableBody = document.querySelector('#cert-details-table tbody');
     certDate = document.getElementById('cert-date');
 
