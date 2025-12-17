@@ -34,9 +34,10 @@ let correctCount = 0;
 let answerHistory = {};
 let currentSessionQuestions = [];
 
-let isExamMode = false; // シャッフル演習モードフラグ
-let examStartTime = 0;
-let examElapsedTime = 0; 
+// タイマー・試験モード関連変数
+let isExamMode = false;
+let examStartTime = 0;      // 現在の計測開始時刻(Date.now())
+let examAccumulatedTime = 0; // 停止するまでの累積時間(ms)
 let examTimerInterval = null;
 let isTimerRunning = false;
 
@@ -159,7 +160,7 @@ function isDifficultyAllowed(questionId) {
     const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
     const difficulty = difficultyMap[questionId];
     
-    // 指定なし(none)が許可されているか
+    // 難易度未定義の場合、'none' が許可されているか、またはA-C全部許可なら通す
     if (!difficulty) {
         return allowed.has('none') || isAllChecked;
     }
@@ -184,18 +185,22 @@ function shuffleArray(array) {
     return array;
 }
 
-/** タイマー更新 */
-function updateTimer() {
+// ==========================================
+//  タイマー機能 (修正版)
+// ==========================================
+
+/** 表示更新 */
+function updateTimerDisplay() {
     if (!examTimerSpan) return;
     
     let totalSeconds = 0;
     if (isTimerRunning) {
-        const now = Date.now();
-        // 現在のセッションの経過時間 + 過去の蓄積時間
-        const currentSession = now - examStartTime;
-        totalSeconds = Math.floor((examElapsedTime + currentSession) / 1000);
+        // 動いている場合: 過去の蓄積 + 今回の経過時間
+        const currentSession = Date.now() - examStartTime;
+        totalSeconds = Math.floor((examAccumulatedTime + currentSession) / 1000);
     } else {
-        totalSeconds = Math.floor(examElapsedTime / 1000);
+        // 止まっている場合: 蓄積時間のみ
+        totalSeconds = Math.floor(examAccumulatedTime / 1000);
     }
 
     const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -205,46 +210,55 @@ function updateTimer() {
 
 /** タイマー開始 (再開) */
 function startTimer() {
-    if (isTimerRunning) return; 
+    if (isTimerRunning) return; // 二重起動防止
+    console.log("[TIMER] Start");
+    
     examStartTime = Date.now();
-    if(examTimerSpan) examTimerSpan.classList.remove('hidden');
     isTimerRunning = true;
-    updateTimer(); 
-    examTimerInterval = setInterval(updateTimer, 1000);
+    
+    if(examTimerSpan) examTimerSpan.classList.remove('hidden');
+    updateTimerDisplay(); 
+    examTimerInterval = setInterval(updateTimerDisplay, 1000);
 }
 
-/** タイマー一時停止 */
+/** タイマー停止 (一時停止・終了) */
 function stopTimer() {
     if (!isTimerRunning) return;
-    
+    console.log("[TIMER] Stop");
+
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
+    
     // 時間を確定して蓄積
-    examElapsedTime += Date.now() - examStartTime;
+    examAccumulatedTime += Date.now() - examStartTime;
     isTimerRunning = false;
-    updateTimer(); 
+    updateTimerDisplay(); // 最終状態を表示
 }
 
 /** タイマーリセット */
 function resetTimer() {
+    console.log("[TIMER] Reset");
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
     isTimerRunning = false;
-    examElapsedTime = 0;
+    examAccumulatedTime = 0;
+    examStartTime = 0;
     if (examTimerSpan) examTimerSpan.textContent = "00:00";
 }
 
 /** 最終時間取得文字列 */
 function getFinalTimeStr() {
-    const totalSeconds = Math.floor(examElapsedTime / 1000);
+    const totalSeconds = Math.floor(examAccumulatedTime / 1000);
     const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
     const seconds = (totalSeconds % 60).toString().padStart(2, '0');
     return `${minutes}:${seconds}`;
 }
+
+// ==========================================
 
 /** PDF描画 */
 async function renderPdf(edition, subject, pageNum = 1) {
@@ -348,6 +362,7 @@ async function renderPageInternal(pdfPageNum) {
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
         }
 
+        // 表紙スキップ (+1)
         const pageObj = await pdfDoc.getPage(pdfPageNum + 1); 
         
         const viewport = pageObj.getViewport({ scale: 1.8 });
@@ -355,6 +370,8 @@ async function renderPageInternal(pdfPageNum) {
         canvas.height = viewport.height; canvas.width = viewport.width;
         context.clearRect(0, 0, canvas.width, canvas.height);
         await pageObj.render({ canvasContext: context, viewport }).promise;
+
+        // --- 描画完了時点 ---
 
         if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
             const question = currentFieldQuestions[currentFieldIndex];
@@ -394,33 +411,34 @@ async function renderPageInternal(pdfPageNum) {
             if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
             if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
 
-            // 未解答かつ試験モードならタイマーをスタート（再開）
-            if (isExamMode && !history) {
-                startTimer();
+            // ★ タイマー制御 ★
+            // 試験モードで、まだ解答していない場合のみタイマーを動かす
+            if (isExamMode) {
+                if (!history) {
+                    startTimer();
+                } else {
+                    // 既に解答済みの問題に戻ってきた場合は動かさない(閲覧中)
+                    // ただし、もし動いていたら止める
+                    stopTimer();
+                }
             }
 
             if (history && activePanel && activeResultArea) {
                 const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${history.selected}"]`);
                 const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
 
-                if (isExamMode) {
-                    if (selectedButton) {
-                        selectedButton.classList.add('selected-answer-exam');
-                    }
-                    activeResultArea.textContent = '解答済み';
+                // 通常通りの正誤表示
+                if (history.correct) {
+                    if(selectedButton) selectedButton.classList.add('correct-selection');
+                    activeResultArea.textContent = `正解！ 🎉`;
+                    activeResultArea.className = 'result-area correct';
                 } else {
-                    if (history.correct) {
-                        if(selectedButton) selectedButton.classList.add('correct-selection');
-                        activeResultArea.textContent = `正解！ 🎉`;
-                        activeResultArea.className = 'result-area correct';
-                    } else {
-                        if(selectedButton) selectedButton.classList.add('incorrect-selection');
-                        if(correctButton) correctButton.classList.add('correct-answer');
-                        activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
-                        activeResultArea.className = 'result-area incorrect';
-                    }
-                    if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
+                    if(selectedButton) selectedButton.classList.add('incorrect-selection');
+                    if(correctButton) correctButton.classList.add('correct-answer');
+                    activeResultArea.textContent = `不正解... (正解は ${history.correctAnswer}) ❌`;
+                    activeResultArea.className = 'result-area incorrect';
                 }
+                if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
                 
                 activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
             }
@@ -541,7 +559,7 @@ function checkAnswer(selectedChoice) {
         return;
     }
 
-    // 解答したらタイマー停止
+    // ★ タイマー停止 ★ (解答した瞬間)
     if (isExamMode) {
         stopTimer();
     }
@@ -552,7 +570,6 @@ function checkAnswer(selectedChoice) {
     const selectedButton = activePanel.querySelector(`.answer-btn[data-choice="${selectedChoice}"]`);
     const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${correctAnswer}"]`);
 
-    // シャッフル演習も含め、全モードで即時正誤表示
     if (isCorrect) {
         correctCount++; updateScoreDisplay();
         resultArea.textContent = `正解！ 🎉`; resultArea.className = 'result-area correct';
@@ -838,7 +855,6 @@ function setupEventListeners() {
             alert("難易度を少なくとも1つ選択してください。"); return;
         }
 
-        // 選択情報を保存
         examSelectedSubjectsText = selectedSubjectsTexts.join(", ");
         examSelectedDiffText = selectedDiffTexts.join(", ");
 
