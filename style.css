@@ -425,3 +425,14 @@ select {
     .cert-header { font-size: 1.8em; }
     .cert-score-value { font-size: 2.2em; }
 }
+
+/* 解説モーダル内の画像スタイル */
+#explanation-body img {
+    max-width: 100%;       /* 親要素からはみ出さないようにする */
+    height: auto;          /* アスペクト比を保持 */
+    display: block;        /* ブロック要素にして改行させる */
+    margin: 15px auto;     /* 上下に余白、左右中央揃え */
+    border: 1px solid #ddd;/* 薄い枠線（お好みで） */
+    border-radius: 4px;    /* 角を少し丸く（お好みで） */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 影をつける（お好みで） */
+}
