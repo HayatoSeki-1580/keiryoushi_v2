@@ -13,6 +13,7 @@
         { "edition": "76", "subject": "houki", "pageNum": "8" },
         { "edition": "76", "subject": "houki", "pageNum": "9" },
         { "edition": "76", "subject": "houki", "pageNum": "10" },
+        { "edition": "76", "subject": "houki", "pageNum": "11" },
         { "edition": "76", "subject": "houki", "pageNum": "15" },
         { "edition": "76", "subject": "houki", "pageNum": "17" },
         { "edition": "76", "subject": "houki", "pageNum": "18" },
@@ -45,13 +46,27 @@
       "levelName": "難易度 B (普通)",
       "value": "B",
       "questions": [
-        { "edition": "74", "subject": "houki", "pageNum": "2" }
+        { "edition": "76", "subject": "houki", "pageNum": "6" },
+        { "edition": "76", "subject": "houki", "pageNum": "12" },
+        { "edition": "76", "subject": "houki", "pageNum": "13" },
+        { "edition": "76", "subject": "houki", "pageNum": "14" },
+        
+        { "edition": "76", "subject": "houki", "pageNum": "16" },
+        { "edition": "76", "subject": "houki", "pageNum": "20" },
+        { "edition": "76", "subject": "houki", "pageNum": "21" },
+        { "edition": "76", "subject": "houki", "pageNum": "23" },
+        { "edition": "76", "subject": "houki", "pageNum": "24" }
+
+        
       ]
     },
     {
       "levelName": "難易度 C (難しい)",
       "value": "C",
-      "questions": []
+      "questions": [
+
+        
+      ]
     }
   ]
 }
