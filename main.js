@@ -106,17 +106,27 @@ async function loadDifficultyData() {
     try {
         const response = await fetch('./data/difficulty.json');
         if (!response.ok) throw new Error('難易度データ読込失敗');
+        
         const data = await response.json();
-        difficultyData = data.levels;
-
-        // ID検索用マップ作成
+        
+        // マップを初期化
         difficultyMap = {}; 
-        difficultyData.forEach(level => {
-            level.questions.forEach(q => {
-                const id = getQuestionId(q.edition, q.subject, q.pageNum);
-                difficultyMap[id] = level.value;
-            });
-        });
+
+        // データ構造: { "76": { "houki": { "1": "A", "2": "B", ... } } }
+        for (const [edition, subjects] of Object.entries(data)) {
+            // メタデータなどが含まれる場合のガード（必要なら）
+            if (edition === 'levels') continue;
+
+            for (const [subject, questions] of Object.entries(subjects)) {
+                for (const [pageNum, levelValue] of Object.entries(questions)) {
+                    // IDを生成してマップに登録
+                    const id = getQuestionId(edition, subject, pageNum);
+                    difficultyMap[id] = levelValue;
+                }
+            }
+        }
+
+        console.log("✅ 難易度データをロードしました:", Object.keys(difficultyMap).length, "件");
 
     } catch (e) {
         console.error("❌ difficulty.json読込エラー:", e);
