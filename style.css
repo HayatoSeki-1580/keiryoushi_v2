@@ -1,438 +1,95 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1em;
-    background-color: #f4f4f9;
-    color: #333;
-    overflow-x: hidden;
-}
+/* ========== リセット & ベース ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f4f8; color: #333; min-height: 100vh; }
 
-h1 {
-    color: #444;
-    text-align: center; 
-    margin-bottom: 1em;
-}
+/* ========== ナビゲーション ========== */
+#main-nav { display: flex; background: #2c3e50; padding: 8px 16px; gap: 8px; }
+.nav-btn { background: transparent; color: #ecf0f1; border: 2px solid transparent; border-radius: 6px; padding: 8px 16px; cursor: pointer; font-size: 14px; transition: all .2s; }
+.nav-btn:hover { background: rgba(255,255,255,.1); }
+.nav-btn.active { border-color: #3498db; background: rgba(52,152,219,.2); }
 
-/* ======== 主要コンテナのレスポンシブ設定 ======== */
-.control-panel, .navigation, .viewer-container, #results-panel {
-    width: 100%; 
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    box-sizing: border-box;
-}
+/* ========== パネル ========== */
+.panel { display: none; max-width: 800px; margin: 24px auto; padding: 0 16px; }
+.panel.active { display: block; }
 
-/* ======== タブのスタイル ======== */
-.mode-tabs {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: -1px;
-    z-index: 1;
-}
+/* ========== カード ========== */
+.card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.card h2 { font-size: 16px; color: #555; margin-bottom: 12px; }
 
-.tab-btn {
-    padding: 0.8em 1em;
-    border: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    background-color: #f0f0f0;
-    cursor: pointer;
-    border-radius: 8px 8px 0 0;
-    font-size: 1em;
-    font-weight: bold;
-    color: #555;
-    transition: background-color 0.2s, color 0.2s;
-    text-align: center;
-    flex-grow: 1;
-    max-width: 200px;
-}
+/* ========== ボタン共通 ========== */
+button { cursor: pointer; border: none; border-radius: 8px; padding: 10px 20px; font-size: 15px; transition: all .2s; }
+button:hover { opacity: .85; transform: translateY(-1px); }
+button:active { transform: translateY(0); }
 
-.tab-btn.active {
-    background-color: #fff;
-    border-bottom: 1px solid #fff;
-    color: #007bff;
-}
+/* ========== 科目ボタン ========== */
+#subject-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+#subject-buttons button { background: #3498db; color: #fff; }
+#subject-buttons button.selected { background: #2980b9; box-shadow: 0 0 0 3px rgba(52,152,219,.4); }
 
-/* ======== コントロールパネルのスタイル ======== */
-.control-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 1em;
-    background: #fff;
-    padding: 1em;
-    border-radius: 0 0 8px 8px;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 1em;
-}
+/* ========== モードボタン ========== */
+#mode-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+#mode-buttons button { background: #27ae60; color: #fff; display: flex; align-items: center; gap: 8px; }
 
-.top-row, .actions-row {
-    display: flex;
-    flex-wrap: wrap; 
-    align-items: center;
-    gap: 0.8em 1em;
-}
+/* ========== シャッフル問題数 ========== */
+#shuffle-count { background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.5); border-radius: 4px; color: #fff; padding: 2px 4px; font-size: 13px; cursor: pointer; }
 
-.actions-row {
-    justify-content: space-between;
-}
+/* ========== 難易度フィルター ========== */
+.difficulty-filter { display: flex; gap: 16px; flex-wrap: wrap; }
+.difficulty-filter label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; }
 
-.select-group {
-    display: grid;
-    align-items: center;
-    flex-grow: 1;
-    min-width: 200px;
-}
+/* ========== 問題ヘッダー ========== */
+#quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: #666; }
+#quiz-timer { font-weight: bold; color: #e74c3c; }
 
-.select-group label {
-    margin-right: 0.5em;
-    font-weight: bold;
-    white-space: nowrap;
-}
+/* ========== 難易度表示 ========== */
+#difficulty-display { font-size: 18px; margin-bottom: 8px; }
 
-select {
-    padding: 0.5em;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    flex-grow: 1;
-    width: auto;
-    min-width: 100px;
-}
+/* ========== 問題文 ========== */
+#question-text { font-size: 16px; line-height: 1.7; margin-bottom: 16px; white-space: pre-wrap; }
 
-/* ======== カスタムプルダウン ======== */
-.custom-select {
-    position: relative;
-    flex-grow: 1;
-    min-width: 0;
-    font-size: 1em;
-}
+/* ========== 選択肢 ========== */
+#choices { display: flex; flex-direction: column; gap: 10px; }
+#choices button { background: #ecf0f1; color: #333; text-align: left; padding: 12px 16px; border-radius: 8px; font-size: 15px; }
+#choices button.correct { background: #2ecc71; color: #fff; }
+#choices button.wrong { background: #e74c3c; color: #fff; }
+#choices button:disabled { cursor: default; transform: none; opacity: 1; }
 
-.select-selected {
-    display: block;
-    background-color: #fff;
-    padding: 0.5em 30px 0.5em 0.5em;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    height: 2.2em;
-    box-sizing: border-box;
-    line-height: 1.2em;
-    position: relative;
-    width: 100%;
-}
+/* ========== ナビボタン ========== */
+#quiz-nav { display: flex; justify-content: space-between; margin-top: 8px; }
+#quiz-nav button { background: #95a5a6; color: #fff; }
 
-.select-selected:after { 
-    content: "";
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    width: 0; height: 0; border: 5px solid transparent;
-    border-color: #555 transparent transparent transparent;
-}
+/* ========== 結果 ========== */
+#score-display { font-size: 24px; font-weight: bold; text-align: center; margin: 12px 0; }
+#certificate { text-align: center; font-size: 28px; margin: 8px 0; }
+#btn-back-home { display: block; margin: 0 auto; background: #3498db; color: #fff; padding: 12px 32px; font-size: 16px; }
 
-.select-selected.select-arrow-active:after {
-    border-color: transparent transparent #555 transparent;
-    transform: translateY(-50%) translateY(-3px);
-}
+/* ========== 履歴 ========== */
+#history-display { font-size: 14px; line-height: 1.8; color: #555; }
 
-.select-items {
-    position: absolute; background-color: #fff; top: 100%; left: 0; right: 0;
-    z-index: 99; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto;
-    border: 1px solid #ccc; border-top: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+/* ========== モーダル ========== */
+#modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+#modal-overlay.hidden { display: none; }
+#modal-content { background: #fff; border-radius: 12px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+#modal-close { position: absolute; top: 12px; right: 12px; background: #e74c3c; color: #fff; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; padding: 0; }
+#explanation-text { font-size: 15px; line-height: 1.8; margin-bottom: 16px; white-space: pre-wrap; }
+#explanation-difficulty { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.diff-btn { background: #ecf0f1; color: #333; padding: 6px 14px; font-size: 14px; }
+.diff-btn.active { background: #f39c12; color: #fff; }
 
-.select-items div {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.6em 0.8em; border-bottom: 1px solid #eee; cursor: pointer;
-    transition: background-color 0.1s ease; gap: 0.5em;
-}
+/* ========== スピナー ========== */
+#spinner { position: fixed; inset: 0; background: rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+#spinner.hidden { display: none; }
+.spinner-inner { width: 48px; height: 48px; border: 5px solid #ddd; border-top-color: #3498db; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.select-items div span:first-child {
-    flex-grow: 1; white-space: normal; overflow-wrap: break-word; text-align: left;
-    line-height: 1.3;
-}
+/* ========== トースト ========== */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: #fff; padding: 12px 24px; border-radius: 24px; font-size: 15px; z-index: 3000; opacity: 1; transition: opacity .4s; pointer-events: none; }
+.toast.hidden { opacity: 0; pointer-events: none; }
+.toast.success { background: #27ae60; }
+.toast.error { background: #e74c3c; }
+.toast.info { background: #2980b9; }
 
-.select-items div:last-child { border-bottom: none; }
-.select-hide { display: none; }
-.select-items div:hover { background-color: #007bff; color: white; }
-.select-items div:hover .freq-bar-container { background-color: #e9ecef; }
-.select-items div:hover .freq-bar { opacity: 0.8; }
-.same-as-selected { background-color: #f8f9fa !important; color: #333 !important; font-weight: bold; }
-.same-as-selected .freq-bar-container { background-color: #e9ecef !important; }
-.same-as-selected .freq-bar { opacity: 1 !important; }
-.freq-bar-container { margin-left: auto; width: 50px; height: 10px; background-color: #e9ecef; border-radius: 2px; overflow: hidden; flex-shrink: 0; }
-.freq-bar { display: block; height: 100%; border-radius: 2px; transition: width 0.3s ease; }
-.freq-high { background-color: #e74c3c; }
-.freq-medium { background-color: #f39c12; }
-.freq-low { background-color: #2ecc71; }
+/* ========== 危険ボタン ========== */danger-btn { background: #e74c3c; color: #fff; margin-top: 12px; }
 
-
-/* ======== ナビゲーションエリア ======== */
-.navigation {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.8em; 
-    margin-bottom: 1em;
-}
-
-.navigation button, #go-btn-edition, #go-btn-field, #go-btn-shuffle, #finish-exam-btn { 
-    padding: 0.5em 1em; border: none; background-color: #007bff; color: white;
-    border-radius: 4px; cursor: pointer; transition: background-color 0.2s;
-    flex-shrink: 0;
-}
-
-#finish-exam-btn { background-color: #e74c3c; } /* 試験終了ボタンは赤系 */
-#finish-exam-btn:hover { background-color: #c0392b; }
-
-.navigation button:disabled { background-color: #ccc; cursor: not-allowed; }
-.navigation button:hover:not(:disabled), #go-btn-edition:hover, #go-btn-field:hover, #go-btn-shuffle:hover { background-color: #0056b3; }
-#page-indicator { font-size: 1.1em; font-weight: bold; min-width: 60px; text-align: center; }
-.jump-select { width: 90px; flex-shrink: 0; }
-.source-info {
-    font-size: 0.9em; color: #555; font-weight: bold; margin-left: auto;
-    padding: 0.5em; background-color: #e9ecef; border-radius: 4px; display: none;
-    white-space: nowrap;
-}
-
-/* ======== PDF表示エリア ======== */
-.viewer-container {
-    position: relative; border: 1px solid #ccc; margin-bottom: 1em; background: #fff;
-    min-height: 300px;
-}
-
-#pdf-canvas { width: 100%; height: auto; display: block; }
-#welcome-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex;
-    flex-direction: column; justify-content: center; align-items: center;
-    background-color: rgba(255, 255, 255, 0.98); text-align: center; padding: 1em;
-    box-sizing: border-box; border-radius: 8px; z-index: 10;
-}
-
-#welcome-overlay h2 { margin-top: 0; font-size: 1.2em; }
-#welcome-overlay p { font-size: 1em; }
-
-
-/* ======== 解答エリア ======== */
-.answer-group { display: flex; align-items: center; gap: 0.8em; }
-.answer-label { font-weight: bold; white-space: nowrap; }
-.answer-buttons { display: flex; gap: 0.5em; }
-.answer-btn {
-    font-size: 1.1em; width: 40px; height: 40px; margin: 0; cursor: pointer;
-    border: 1px solid #007bff; background-color: #fff; color: #007bff;
-    border-radius: 50%; transition: all 0.2s; flex-shrink: 0;
-}
-
-.answer-btn:hover:not(.disabled) { background-color: #e7f1ff; }
-.answer-btn.correct-selection { background-color: #28a745; color: white; border-color: #1e7e34; }
-.answer-btn.incorrect-selection { background-color: #dc3545; color: white; border-color: #bd2130; }
-.answer-btn.correct-answer { border: 3px solid #28a745; font-weight: bold; color: #28a745; }
-.answer-btn.selected-answer-exam { background-color: #007bff; color: white; } /* 試験中の選択色 */
-
-.answer-btn.disabled { cursor: not-allowed; opacity: 0.65; }
-.answer-btn.correct-selection.disabled, .answer-btn.incorrect-selection.disabled, .answer-btn.selected-answer-exam.disabled { opacity: 1; }
-.answer-btn.disabled:not(.correct-selection):not(.incorrect-selection):not(.correct-answer):not(.selected-answer-exam) { opacity: 0.5; background-color: #e9ecef; border-color: #ced4da; color: #6c757d; }
-.answer-btn.correct-answer.disabled { opacity: 0.7; }
-
-.result-area {
-    font-size: 1.1em; font-weight: bold; min-height: 1.5em; padding: 0.5em;
-    flex-grow: 1; text-align: right; white-space: nowrap;
-}
-
-.correct { color: #28a745; }
-.incorrect { color: #dc3545; }
-
-
-/* ======== スコア・成績ボタン ======== */
-.score-counter { font-weight: bold; font-size: 1em; color: #333; white-space: nowrap; }
-.score-correct { font-size: 1.1em; color: #007bff; }
-.results-btn {
-    padding: 0.4em 0.8em; border: 1px solid #6c757d; background-color: #fff; color: #6c757d;
-    border-radius: 4px; cursor: pointer; font-size: 0.9em; transition: all 0.2s;
-    margin-left: 0.5em; white-space: nowrap; flex-shrink: 0;
-}
-
-.results-btn:hover { background-color: #6c757d; color: #fff; }
-
-
-/* ======== 成績パネル ======== */
-#results-panel { margin-top: 1em; padding: 1em; }
-#results-panel h2 { font-size: 1.5em; margin-top: 0; text-align: center; color: #333; }
-#results-summary { font-size: 1.1em; font-weight: bold; text-align: center; margin-bottom: 1.5em; }
-#results-list table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
-#results-list th, #results-list td { border: 1px solid #ddd; padding: 0.5em; font-size: 0.9em; text-align: center; vertical-align: middle; }
-#results-list th { background-color: #f8f9fa; font-weight: bold; }
-.result-status-correct { color: #28a745; font-weight: bold; }
-.result-status-incorrect { color: #dc3545; font-weight: bold; }
-.review-btn { padding: 0.2em 0.5em; font-size: 0.8em; cursor: pointer; border: 1px solid #007bff; background-color: #fff; color: #007bff; border-radius: 4px; }
-.review-btn:hover { background-color: #e7f1ff; }
-#back-to-exercise-btn { display: block; margin: 1.5em auto 0; padding: 0.6em 1.2em; border: none; background-color: #007bff; color: white; border-radius: 4px; cursor: pointer; font-size: 1em; }
-#back-to-exercise-btn:hover { background-color: #0056b3; }
-
-
-/* ======== 成績証明書スタイル ======== */
-.certificate {
-    border: 10px solid #d4af37; /* ゴールド */
-    padding: 30px;
-    text-align: center;
-    margin-bottom: 30px;
-    background-color: #fffdf5;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; /* 明朝体っぽく */
-}
-.cert-header {
-    font-size: 2.5em;
-    font-weight: bold;
-    margin-bottom: 20px;
-    color: #333;
-    border-bottom: 2px solid #d4af37;
-    display: inline-block;
-    padding-bottom: 10px;
-}
-.cert-body { margin-bottom: 30px; text-align: center;} /* 中央揃え強化 */
-.cert-meta {
-    margin-bottom: 20px;
-    font-size: 1.1em;
-    color: #555;
-    text-align: center; /* 中央揃え */
-    display: inline-block; /* インラインブロックで中央配置 */
-    text-align: left; /* 内部は左揃えで見やすく */
-}
-.cert-meta-row { margin-bottom: 5px; }
-.cert-label { font-weight: bold; display: inline-block; min-width: 80px; }
-
-.cert-score-area { margin: 20px 0; }
-.cert-score-label { font-size: 1.2em; color: #555; }
-.cert-score-value { font-size: 3em; font-weight: bold; color: #e74c3c; }
-.cert-time-area { font-size: 1.2em; margin-bottom: 20px; color: #333; }
-.cert-grade { font-size: 2.5em; font-weight: bold; margin: 20px 0; }
-.cert-details { margin: 20px auto; max-width: 600px; }
-#cert-details-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-#cert-details-table th { background-color: #f0e6cc; border: 1px solid #d4af37; padding: 5px; }
-#cert-details-table td { border: 1px solid #d4af37; padding: 5px; }
-.cert-o { color: #28a745; font-weight: bold; font-size: 1.2em; }
-.cert-x { color: #dc3545; font-weight: bold; font-size: 1.2em; }
-.cert-date { font-size: 1em; color: #777; margin-top: 20px; }
-.cert-footer { font-size: 1.1em; font-weight: bold; margin-top: 30px; }
-
-
-/* ======== 汎用クラス ======== */
-.hidden { display: none !important; }
-
-/* ======== 難易度バッジ & タイマー ======== */
-.difficulty-badge {
-    display: inline-block;
-    padding: 0.3em 0.8em;
-    border-radius: 12px;
-    font-weight: bold;
-    color: white;
-    font-size: 0.9em;
-    margin-left: 10px;
-    background-color: #999;
-}
-.diff-easy { background-color: #28a745; }
-.diff-normal { background-color: #ffc107; color: #333; }
-.diff-hard { background-color: #dc3545; }
-
-.exam-timer {
-    display: inline-block;
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #d32f2f; /* 赤色で目立たせる */
-    margin-left: 15px;
-    border: 2px solid #d32f2f;
-    padding: 0 5px;
-    border-radius: 4px;
-    background-color: #fff0f0;
-}
-
-
-/* ======== トグルスイッチエリア ======== */
-.toggle-group {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-}
-.toggle-group label {
-    margin-right: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
-/* ======== フィルター & 科目チェックボックスエリア ======== */
-.filter-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
-    margin-left: 10px;
-    font-weight: bold;
-    font-size: 0.9em;
-    padding: 0 10px;
-    border-left: 1px solid #ccc;
-}
-.filter-label { margin-right: 2px; }
-.filter-group label { cursor: pointer; display: flex; align-items: center; gap: 2px; }
-
-.subject-checkbox-container {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5em;
-    flex-grow: 1;
-}
-.checkbox-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.8em;
-}
-.checkbox-grid label { cursor: pointer; font-size: 0.9em; font-weight: bold; }
-
-.exam-notice {
-    font-size: 0.85em; color: #d9534f; margin-top: 5px; margin-bottom: 5px;
-}
-
-
-/* ======== スマホ向け調整 (例: 画面幅600px以下) ======== */
-@media (max-width: 600px) {
-    body { padding: 0.5em; }
-    h1 { font-size: 1.5em; }
-    .control-panel, .navigation, .viewer-container, #results-panel { padding: 0.8em; }
-    .select-group { min-width: calc(50% - 1em); } 
-    .custom-select { width: 100%; }
-    .answer-btn { width: 38px; height: 38px; font-size: 1em; }
-    .actions-row { flex-direction: column; align-items: flex-start; } 
-    .score-counter, .results-btn, .result-area { width: 100%; text-align: left; margin-left: 0; }
-    .result-area { margin-top: 0.5em; }
-    .navigation { gap: 0.5em; }
-    .source-info { margin-left: 0; margin-top: 0.5em; width: 100%; text-align: right; }
-    #results-list th, #results-list td { padding: 0.4em; font-size: 0.8em; }
-    .difficulty-badge { margin-left: 0; margin-top: 0.5em; display: inline-block; }
-    .exam-timer { margin-left: 5px; margin-top: 0.5em; }
-    
-    .top-row { align-items: flex-start; }
-    .toggle-group { width: 100%; margin-top: 0.5em; justify-content: flex-end; } 
-    .filter-group { width: 100%; border-left: none; padding: 0; margin-top: 0.5em; margin-left: 0; justify-content: flex-start; }
-    .checkbox-grid { gap: 0.5em; }
-    
-    .cert-header { font-size: 1.8em; }
-    .cert-score-value { font-size: 2.2em; }
-}
-
-/* 解説モーダル内の画像スタイル */
-#explanation-body img {
-    max-width: 100%;       /* 親要素からはみ出さないようにする */
-    height: auto;          /* アスペクト比を保持 */
-    display: block;        /* ブロック要素にして改行させる */
-    margin: 15px auto;     /* 上下に余白、左右中央揃え */
-    border: 1px solid #ddd;/* 薄い枠線（お好みで） */
-    border-radius: 4px;    /* 角を少し丸く（お好みで） */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 影をつける（お好みで） */
-}
+/* ========== PDF Canvas ========== */
+#pdf-canvas { max-width: 100%; display: block; margin: 12px auto; border: 1px solid #ddd; border-radius: 4px; }
