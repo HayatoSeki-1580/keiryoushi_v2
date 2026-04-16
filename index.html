@@ -1,338 +1,133 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計量士国家試験 演習ブラウザ</title>
-    <link rel="stylesheet" href="style.css">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
-    <style>
-        /* 解説ボタン（初期は非表示） */
-        .explanation-btn {
-            background-color: #28a745; /* 緑色 */
-            color: white;
-            margin-left: 10px;
-        }
-        .explanation-btn:hover { background-color: #218838; }
-
-        /* モーダル全体のスタイル */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5); /* 背景を暗く */
-        }
-
-        /* モーダルコンテンツ */
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 800px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            position: relative;
-        }
-
-        /* 閉じるボタン */
-        .close-modal {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-modal:hover,
-        .close-modal:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        /* 解説本文のスタイル */
-        #explanation-body {
-            line-height: 1.6;
-            margin-top: 10px;
-            font-size: 16px;
-        }
-        #explanation-body h3 { border-bottom: 2px solid #ddd; padding-bottom: 5px; }
-        #explanation-body code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
-        #explanation-body blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 10px; color: #555; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>計量士国家試験 過去問アプリ</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
-    <h1>計量士国家試験 演習ブラウザ</h1>
 
-    <div id="exercise-view">
+<!-- ===== ナビゲーション ===== -->
+<nav id="main-nav">
+  <button id="btn-home" class="nav-btn active">🏠 ホーム</button>
+  <button id="btn-quiz" class="nav-btn">📝 問題</button>
+  <button id="btn-results" class="nav-btn">📊 結果</button>
+</nav>
 
-        <div class="mode-tabs">
-            <button id="tab-by-edition" class="tab-btn active">年度別演習</button>
-            <button id="tab-by-field" class="tab-btn">分野別演習</button>
-            <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
-        </div>
+<!-- ===== トースト通知 ===== -->
+<div id="toast" class="toast hidden"></div>
 
-        <div id="panel-by-edition" class="control-panel">
-            <div class="top-row">
-                <div class="select-group">
-                    <label for="edition-select">実施回:</label>
-                    <select id="edition-select"></select>
-                </div>
-                <div class="select-group">
-                    <label for="subject-select-edition">科目:</label>
-                    <select id="subject-select-edition">
-                        <option value="kanka">環化</option>
-                        <option value="kanbutsu">環物</option>
-                        <option value="kannou">環濃</option>
-                        <option value="kanon">環音</option>
-                        <option value="houki">法規</option>
-                        <option value="kanri">管理</option>
-                        <option value="ichiki">一基</option>
-                        <option value="keishitsu">計質</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <span class="filter-label">難易度:</span>
-                    <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
-                    <label><input type="checkbox" value="B" checked class="diff-filter-cb">B(普)</label>
-                    <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
-                    <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
-                </div>
+<!-- ===== ホームパネル ===== -->
+<div id="panel-home" class="panel active">
+  <h1>計量士国家試験 過去問</h1>
 
-                <button id="go-btn-edition">表示</button>
+  <section class="card">
+    <h2>科目を選ぶ</h2>
+    <div id="subject-buttons"></div>
+  </section>
 
-                <div class="toggle-group">
-                    <label for="toggle-diff-edition">難易度を表示</label>
-                    <input type="checkbox" id="toggle-diff-edition" class="difficulty-toggle-checkbox">
-                </div>
-            </div>
-            <div class="actions-row">
-                <div class="answer-group">
-                    <span class="answer-label">解答:</span>
-                    <div class="answer-buttons">
-                        <button class="answer-btn" data-choice="1">1</button>
-                        <button class="answer-btn" data-choice="2">2</button>
-                        <button class="answer-btn" data-choice="3">3</button>
-                        <button class="answer-btn" data-choice="4">4</button>
-                        <button class="answer-btn" data-choice="5">5</button>
-                    </div>
-                </div>
-                <div id="score-counter-edition" class="score-counter">
-                    正答数: <span class="score-correct">0</span>
-                </div>
-                <button id="show-results-btn-edition" class="results-btn">成績を見る</button>
-                <button id="btn-explanation-edition" class="explanation-btn hidden">解説を見る</button>
-                <div id="result-area-edition" class="result-area"></div>
-            </div>
-        </div>
-
-        <div id="panel-by-field" class="control-panel hidden">
-             <div class="top-row">
-                 <div class="select-group">
-                     <label for="subject-select-field">科目:</label>
-                     <select id="subject-select-field">
-                         <option value="kanka">環化</option>
-                         <option value="kanbutsu">環物</option>
-                         <option value="kannou">環濃</option>
-                         <option value="kanon">環音</option>
-                         <option value="houki">法規</option>
-                         <option value="kanri">管理</option>
-                         <option value="ichiki">一基</option>
-                         <option value="keishitsu">計質</option>
-                     </select>
-                 </div>
-                 <div class="select-group">
-                     <label>分野:</label> 
-                     <div id="field-select-custom" class="custom-select">
-                         <div class="select-selected">分野を選択...</div>
-                         <div class="select-items select-hide"></div>
-                     </div>
-                 </div>
-
-                 <div class="filter-group">
-                    <span class="filter-label">難易度:</span>
-                    <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
-                    <label><input type="checkbox" value="B" checked class="diff-filter-cb">B(普)</label>
-                    <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
-                    <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
-                </div>
-
-                 <button id="go-btn-field">表示</button>
-
-                 <div class="toggle-group">
-                    <label for="toggle-diff-field">難易度を表示</label>
-                    <input type="checkbox" id="toggle-diff-field" class="difficulty-toggle-checkbox">
-                </div>
-             </div>
-            <div class="actions-row">
-                 <div class="answer-group">
-                    <span class="answer-label">解答:</span>
-                    <div class="answer-buttons">
-                        <button class="answer-btn" data-choice="1">1</button>
-                        <button class="answer-btn" data-choice="2">2</button>
-                        <button class="answer-btn" data-choice="3">3</button>
-                        <button class="answer-btn" data-choice="4">4</button>
-                        <button class="answer-btn" data-choice="5">5</button>
-                    </div>
-                </div>
-                <div id="score-counter-field" class="score-counter">
-                    正答数: <span class="score-correct">0</span>
-                </div>
-                <button id="show-results-btn-field" class="results-btn">成績を見る</button>
-                <button id="btn-explanation-field" class="explanation-btn hidden">解説を見る</button>
-                <div id="result-area-field" class="result-area"></div>
-            </div>
-        </div>
-
-        <div id="panel-shuffle" class="control-panel hidden">
-            <div class="top-row">
-                <div class="subject-checkbox-container">
-                    <span class="filter-label">出題科目:</span>
-                    <div class="checkbox-grid">
-                        <label><input type="checkbox" value="kanka" class="shuffle-subject-cb">環化</label>
-                        <label><input type="checkbox" value="kanbutsu" class="shuffle-subject-cb">環物</label>
-                        <label><input type="checkbox" value="kannou" class="shuffle-subject-cb">環濃</label>
-                        <label><input type="checkbox" value="kanon" class="shuffle-subject-cb">環音</label>
-                        <label><input type="checkbox" value="houki" class="shuffle-subject-cb">法規</label>
-                        <label><input type="checkbox" value="kanri" class="shuffle-subject-cb">管理</label>
-                        <label><input type="checkbox" value="ichiki" class="shuffle-subject-cb">一基</label>
-                        <label><input type="checkbox" value="keishitsu" class="shuffle-subject-cb">計質</label>
-                    </div>
-                </div>
-
-                 <div class="filter-group">
-                    <span class="filter-label">難易度:</span>
-                    <label><input type="checkbox" value="A" class="shuffle-diff-cb">A(易)</label>
-                    <label><input type="checkbox" value="B" class="shuffle-diff-cb">B(普)</label>
-                    <label><input type="checkbox" value="C" class="shuffle-diff-cb">C(難)</label>
-                    <label><input type="checkbox" value="none" checked class="shuffle-diff-cb">指定なし</label>
-                </div>
-
-                <button id="go-btn-shuffle" class="exam-start-btn">演習開始 (5問)</button>
-            </div>
-            
-            <div class="actions-row">
-                <div class="answer-group">
-                   <span class="answer-label">解答:</span>
-                   <div class="answer-buttons">
-                       <button class="answer-btn" data-choice="1">1</button>
-                       <button class="answer-btn" data-choice="2">2</button>
-                       <button class="answer-btn" data-choice="3">3</button>
-                       <button class="answer-btn" data-choice="4">4</button>
-                       <button class="answer-btn" data-choice="5">5</button>
-                   </div>
-               </div>
-               
-               <div id="score-counter-shuffle" class="score-counter">
-                   正答数: <span class="score-correct">0</span>
-               </div>
-               
-               <button id="finish-exam-btn" class="results-btn hidden">試験終了</button>
-               <button id="show-results-btn-shuffle" class="results-btn hidden">成績を見る</button>
-               <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
-               
-               <div id="result-area-shuffle" class="result-area"></div>
-           </div>
-       </div>
-
-        <div class="navigation">
-            <button id="prev-btn">◀ 前の問題</button>
-            <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
-            <span id="difficulty-badge" class="difficulty-badge hidden"></span>
-            <span id="exam-timer" class="exam-timer hidden">00:00</span>
-
-            <button id="next-btn">次の問題 ▶</button>
-            <select id="jump-to-select" class="jump-select">
-                <option value="">移動...</option>
-            </select>
-            <span id="question-source" class="source-info"></span>
-        </div>
-
-        <div class="viewer-container">
-            <div id="welcome-overlay">
-                <h2>過去問演習へようこそ！</h2>
-                <p>学習したいモードを選択して「表示」ボタンを押してください。</p>
-            </div>
-            <div id="loading-spinner" class="spinner-overlay hidden">
-                <div class="spinner"></div>
-                <p>読み込み中...</p>
-            </div>
-            <canvas id="pdf-canvas"></canvas>
-        </div>
-
-    </div> 
-
-    <div id="results-panel" class="hidden">
-        <h2>成績一覧</h2>
-        
-        <div id="certificate-container" class="certificate hidden">
-            <div class="cert-header">成績証明書</div>
-            <div class="cert-body">
-                <p>あなたは計量士国家試験 演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
-                
-                <div class="cert-meta">
-                    <div class="cert-meta-row"><span class="cert-label">実施日:</span> <span id="cert-date"></span></div>
-                    <div class="cert-meta-row"><span class="cert-label">出題科目:</span> <span id="cert-subjects"></span></div>
-                    <div class="cert-meta-row"><span class="cert-label">難易度:</span> <span id="cert-difficulties"></span></div>
-                </div>
-
-                <div class="cert-score-area">
-                    <div class="cert-score-label">スコア</div>
-                    <div class="cert-score-value">
-                        <span id="cert-score-num">0</span> / 5 点
-                    </div>
-                </div>
-                <div class="cert-time-area">
-                    解答時間: <span id="cert-time-value">--:--</span>
-                </div>
-                
-                <div class="cert-details">
-                    <table id="cert-details-table">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>科目</th>
-                                <th>年度</th>
-                                <th>問</th>
-                                <th>結果</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="cert-footer">計量士委員会</div>
-        </div>
-
-        <div id="cert-image-container" class="hidden" style="text-align:center; margin-bottom:30px;"></div>
-
-        <div id="results-summary"></div>
-        <div id="results-list"></div>
-        <button id="back-to-exercise-btn">演習に戻る</button>
+  <section class="card" id="difficulty-section" style="display:none">
+    <h2>難易度フィルター（ホーム）</h2>
+    <div class="difficulty-filter" data-panel="home">
+      <label><input type="checkbox" class="diff-check" value="1" checked> ★☆☆</label>
+      <label><input type="checkbox" class="diff-check" value="2" checked> ★★☆</label>
+      <label><input type="checkbox" class="diff-check" value="3" checked> ★★★</label>
     </div>
+  </section>
 
-    <div id="explanation-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2 id="explanation-title">解説</h2>
-            <div id="explanation-body">
-                </div>
-        </div>
+  <section class="card" id="mode-section" style="display:none">
+    <h2>モードを選ぶ</h2>
+    <div id="mode-buttons">
+      <button id="btn-sequential">順番に解く</button>
+      <button id="btn-shuffle">
+        シャッフル
+        <select id="shuffle-count" onclick="event.stopPropagation()">
+          <option value="5">5問</option>
+          <option value="10" selected>10問</option>
+          <option value="15">15問</option>
+          <option value="20">20問</option>
+          <option value="30">30問</option>
+        </select>
+      </button>
+      <button id="btn-weak">苦手問題</button>
     </div>
+  </section>
+</div>
 
-    <script src="main.js" type="module"></script>
+<!-- ===== 問題パネル ===== -->
+<div id="panel-quiz" class="panel">
+  <div id="quiz-header">
+    <span id="quiz-progress"></span>
+    <span id="quiz-timer"></span>
+  </div>
+
+  <div class="card">
+    <div id="difficulty-display"></div>
+    <div id="question-text"></div>
+    <canvas id="pdf-canvas"></canvas>
+    <div id="choices"></div>
+  </div>
+
+  <section class="card">
+    <h2>難易度フィルター（問題中）</h2>
+    <div class="difficulty-filter" data-panel="quiz">
+      <label><input type="checkbox" class="diff-check" value="1" checked> ★☆☆</label>
+      <label><input type="checkbox" class="diff-check" value="2" checked> ★★☆</label>
+      <label><input type="checkbox" class="diff-check" value="3" checked> ★★★</label>
+    </div>
+  </section>
+
+  <div id="quiz-nav">
+    <button id="btn-prev">◀ 前へ</button>
+    <button id="btn-next">次へ ▶</button>
+  </div>
+</div>
+
+<!-- ===== 結果パネル ===== -->
+<div id="panel-results" class="panel">
+  <div class="card">
+    <h2>結果</h2>
+    <div id="score-display"></div>
+    <div id="certificate"></div>
+  </div>
+
+  <div class="card">
+    <h2>学習履歴</h2>
+    <div id="history-display"></div>
+    <button id="btn-clear-history" class="danger-btn">🗑 履歴をクリア</button>
+  </div>
+
+  <button id="btn-back-home">🏠 ホームへ戻る</button>
+</div>
+
+<!-- ===== 解説モーダル ===== -->
+<div id="modal-overlay" class="hidden">
+  <div id="modal-content">
+    <button id="modal-close">✕</button>
+    <div id="explanation-text"></div>
+    <div id="explanation-difficulty">
+      難易度：
+      <button class="diff-btn" data-value="1">★☆☆</button>
+      <button class="diff-btn" data-value="2">★★☆</button>
+      <button class="diff-btn" data-value="3">★★★</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== スピナー ===== -->
+<div id="spinner" class="hidden">
+  <div class="spinner-inner"></div>
+</div>
+
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/pdf.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/explanation.js"></script>
+<script src="js/results.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
