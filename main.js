@@ -1,3 +1,5 @@
+const GAS_URL = 'https://script.google.com/a/macros/tanita.co.jp/s/AKfycbyKnq9OQuav2sAm4nQzUCxdVwHfPfiPYs3JQCi7wBN2xrNT8twBM8tyycjKTPleCUoY/exec';
+
 // --- モジュールのインポート ---
 import * as pdfjsLib from './lib/pdfjs/build/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
@@ -103,35 +105,22 @@ async function loadFieldsData() {
 
 /** 難易度ファイル(difficulty.json)読込 */
 async function loadDifficultyData() {
-    try {
-        const response = await fetch('./data/difficulty.json');
-        if (!response.ok) throw new Error('難易度データ読込失敗');
-        
-        const data = await response.json();
-        
-        // マップを初期化
-        difficultyMap = {}; 
-
-        // データ構造: { "76": { "houki": { "1": "A", "2": "B", ... } } }
-        for (const [edition, subjects] of Object.entries(data)) {
-            // メタデータなどが含まれる場合のガード（必要なら）
-            if (edition === 'levels') continue;
-
-            for (const [subject, questions] of Object.entries(subjects)) {
-                for (const [pageNum, levelValue] of Object.entries(questions)) {
-                    // IDを生成してマップに登録
-                    const id = getQuestionId(edition, subject, pageNum);
-                    difficultyMap[id] = levelValue;
-                }
-            }
-        }
-
-        console.log("✅ 難易度データをロードしました:", Object.keys(difficultyMap).length, "件");
-
-    } catch (e) {
-        console.error("❌ difficulty.json読込エラー:", e);
+  try {
+    const res = await fetch(`${GAS_URL}?action=getDifficulty`);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      difficultyData = json.data;
+      console.log('難易度データをスプシから取得しました');
+      return;
     }
+  } catch (e) {
+    console.warn('GAS取得失敗、ローカルにフォールバック', e);
+  }
+  // フォールバック：既存のdifficulty.json
+  const res = await fetch('./data/difficulty.json');
+  difficultyData = await res.json();
 }
+
 
 /** 解答JSON読込 */
 async function loadAnswersForEdition(edition) {
