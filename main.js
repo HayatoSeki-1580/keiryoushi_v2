@@ -39,6 +39,8 @@ let currentFieldIndex = 0;
 let correctCount = 0;
 let answerHistory = {};
 let currentSessionQuestions = [];
+let understandingMap = {};
+let pendingUnderstandingQuestionId = null;
 
 // タイマー・試験モード関連変数
 let isExamMode = false;
