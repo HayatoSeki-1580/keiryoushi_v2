@@ -1210,6 +1210,7 @@ function setupLoginUI() {
         if (loginOverlay) loginOverlay.style.display = 'none';
         if (welcomeOverlay) welcomeOverlay.style.display = 'none';
         updateWeakTabVisibility();
+        showCurrentUser(userId);
       } else {
         loginError.textContent = 'IDまたはパスワードが違います';
         loginError.style.display = 'block';
@@ -1224,13 +1225,15 @@ function setupLoginUI() {
 
   // セッション復元
   const savedUser = sessionStorage.getItem('currentUser');
-  if (savedUser) {
-    currentUser = { userId: savedUser };
-    if (loginOverlay) loginOverlay.style.display = 'none';
-    if (welcomeOverlay) welcomeOverlay.style.display = 'none';
-    updateWeakTabVisibility();
-    loadUnderstandingData();
-  }
+if (savedUser) {
+  currentUser = { userId: savedUser };
+  if (loginOverlay) loginOverlay.style.display = 'none';
+  if (welcomeOverlay) welcomeOverlay.style.display = 'none';
+  updateWeakTabVisibility();
+  loadUnderstandingData();
+  showCurrentUser(savedUser); // ← これを追加
+}
+
 }
 
 
@@ -1390,5 +1393,16 @@ function updateWeakTabVisibility() {
   tabWeak.style.opacity = currentUser ? '1' : '0.5';
   tabWeak.title = currentUser ? '' : 'ログインが必要です';
 }
+function showCurrentUser(userId) {
+  let userDisplay = document.getElementById('user-display');
+  if (!userDisplay) {
+    userDisplay = document.createElement('div');
+    userDisplay.id = 'user-display';
+    userDisplay.style.cssText = 'position:fixed; top:10px; right:10px; background:#fff; border:1px solid #ccc; border-radius:8px; padding:6px 12px; font-size:14px; z-index:9999; box-shadow:0 2px 6px rgba(0,0,0,0.15);';
+    document.body.appendChild(userDisplay);
+  }
+  userDisplay.textContent = `👤 ${userId} でログイン中`;
+}
+
 
 document.addEventListener('DOMContentLoaded', initialize);
