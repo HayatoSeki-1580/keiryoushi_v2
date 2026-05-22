@@ -1165,6 +1165,7 @@ async function initialize() {
     setupWeakUI();
 
     setupEventListeners();
+    setupCsvUploadUI();
 
     console.log("✅ 初期化完了。");
 }
@@ -1402,6 +1403,142 @@ function showCurrentUser(userId) {
     document.body.appendChild(userDisplay);
   }
   userDisplay.textContent = `👤 ${userId} でログイン中`;
+}
+
+// ============================================================
+// 難易度CSVアップロード機能
+// ============================================================
+
+// 科目名マッピング（CSV表記 → DBキー）
+const subjectNameToKey = {
+  '法規': 'houki', '管理': 'kanri', '一基': 'ichiki', '計質': 'keishitsu',
+  '環化': 'kanka', '環物': 'kanbutsu', '環濃': 'kannou', '環音': 'kanon'
+};
+
+// 回次文字列 → 数値（例: "76回(R7)" → 76）
+function parseEdition(str) {
+  const m = str.match(/^(\d+)回/);
+  return m ? parseInt(m[1]) : null;
+}
+
+// 難易度文字列 → A/B/C（例: "A(易)" → "A"）
+function parseDifficulty(str) {
+  const m = str.match(/^([ABC])/);
+  return m ? m[1] : null;
+}
+
+function setupCsvUploadUI() {
+  // UIを動的に生成
+  const container = document.createElement('div');
+  container.id = 'csv-upload-container';
+  container.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9999;';
+
+  container.innerHTML = `
+    <button id="csv-upload-toggle" style="
+      background:#4a90d9; color:#fff; border:none; border-radius:8px;
+      padding:8px 14px; font-size:13px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+      📊 難易度CSV更新
+    </button>
+    <div id="csv-upload-panel" style="
+      display:none; margin-top:8px; background:#fff; border:1px solid #ccc;
+      border-radius:10px; padding:16px; width:280px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:13px;">
+      <div style="font-weight:bold; margin-bottom:8px;">📊 難易度データ更新</div>
+      <input type="file" id="csv-file-input" accept=".csv" style="width:100%; margin-bottom:8px;">
+      <button id="csv-upload-btn" style="
+        width:100%; background:#4a90d9; color:#fff; border:none;
+        border-radius:6px; padding:8px; cursor:pointer; font-size:13px;">
+        アップロード
+      </button>
+      <div id="csv-upload-status" style="margin-top:8px; font-size:12px; color:#555;"></div>
+    </div>
+  `;
+  document.body.appendChild(container);
+
+  document.getElementById('csv-upload-toggle').addEventListener('click', () => {
+    const panel = document.getElementById('csv-upload-panel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('csv-upload-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('csv-file-input');
+    const status = document.getElementById('csv-upload-status');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      status.textContent = '⚠️ CSVファイルを選択してください';
+      status.style.color = 'orange';
+      return;
+    }
+
+    status.textContent = '⏳ 処理中...';
+    status.style.color = '#555';
+
+    try {
+      const text = await file.text();
+      const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+
+      // 1行目: ヘッダー（例: 法規, 76回(R7), 75回(R6),）
+      const header = rows[0];
+      const subjectRaw = header[0]; // 例: "法規"
+      const subject = subjectNameToKey[subjectRaw] || subjectRaw;
+
+      // 回次リスト（2列目以降）
+      const editions = header.slice(1).map(parseEdition);
+
+      const records = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[0] || !row[0].startsWith('問')) continue; // 空行・集計行スキップ
+
+        const questionNum = parseInt(row[0].replace('問', ''));
+        if (isNaN(questionNum)) continue;
+
+        for (let j = 1; j < row.length; j++) {
+          const edition = editions[j - 1];
+          if (!edition) continue;
+          const difficulty = parseDifficulty(row[j]);
+          if (!difficulty) continue;
+
+          records.push({ subject, edition, question_num: questionNum, difficulty });
+        }
+      }
+
+      if (records.length === 0) {
+        status.textContent = '⚠️ 有効なデータが見つかりませんでした';
+        status.style.color = 'orange';
+        return;
+      }
+
+      // Supabaseにupsert
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(records)
+      });
+
+      if (res.ok) {
+        status.textContent = `✅ ${records.length}件を更新しました！`;
+        status.style.color = 'green';
+        // 難易度データを再読み込み
+        await loadDifficultyData();
+      } else {
+        const err = await res.text();
+        status.textContent = `❌ エラー: ${err}`;
+        status.style.color = 'red';
+      }
+
+    } catch (e) {
+      status.textContent = `❌ 処理エラー: ${e.message}`;
+      status.style.color = 'red';
+    }
+  });
 }
 
 
