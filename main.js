@@ -530,7 +530,7 @@ function checkAnswer(selectedChoice) {
     let resultArea = resultAreaEdition;
     let explanationBtn = btnExplanationEdition;
     
-    if (!panelByFieldclassList.contains('hidden')) {
+    if (!panelByField.classList.contains('hidden')) {
         activePanel = panelByField;
         resultArea = resultAreaField;
         explanationBtn = btnExplanationField;
@@ -1160,12 +1160,6 @@ async function initialize() {
 
     console.log("✅ 初期化完了。");
 }
-// ============================================================
-// ログイン・理解度・苦手問題 グローバル変数
-// ============================================================
-let currentUser = null;
-let understandingMap = {};
-let pendingUnderstandingQuestionId = null;
 
 // ============================================================
 // ログイン機能
