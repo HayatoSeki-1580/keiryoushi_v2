@@ -1364,3 +1364,139 @@ function updateWeakTabVisibility() {
 }
 
 document.addEventListener('DOMContentLoaded', initialize);
+
+// ============================================================
+// ログイン・理解度・苦手問題 グローバル変数
+// ============================================================
+let currentUser = null;
+let understandingMap = {};
+let pendingUnderstandingQuestionId = null;
+
+// ============================================================
+// ログイン機能
+// ============================================================
+function setupLoginUI() {
+  const loginOverlay = document.getElementById('login-overlay');
+  const loginBtn = document.getElementById('login-btn');
+  const guestBtn = document.getElementById('guest-btn');
+  const loginError = document.getElementById('login-error');
+
+  if (guestBtn) guestBtn.addEventListener('click', () => {
+    currentUser = null;
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+    updateWeakTabVisibility();
+  });
+
+  if (loginBtn) loginBtn.addEventListener('click', async () => {
+    const userId = document.getElementById('login-userid').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!userId || !password) {
+      loginError.textContent = 'IDとパスワードを入力してください';
+      loginError.style.display = 'block';
+      return;
+    }
+    loginBtn.textContent = 'ログイン中...';
+    loginBtn.disabled = true;
+    try {
+      const hash = await sha256(password);
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'login', userId, passwordHash: hash })
+      });
+      const json = await res.json();
+      if (json.status === 'ok') {
+        currentUser = { userId, displayName: json.displayName, token: json.token };
+        await loadUnderstandingData();
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+        updateWeakTabVisibility();
+      } else {
+        loginError.textContent = json.message || 'ログインに失敗しました';
+        loginError.style.display = 'block';
+      }
+    } catch (e) {
+      loginError.textContent = 'サーバーに接続できませんでした';
+      loginError.style.display = 'block';
+    }
+    loginBtn.textContent = 'ログイン';
+    loginBtn.disabled = false;
+  });
+}
+
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ============================================================
+// 理解度データ取得
+// ============================================================
+async function loadUnderstandingData() {
+  if (!currentUser) return;
+  try {
+    const res = await fetch(`${GAS_URL}?action=getUnderstanding&token=${currentUser.token}`);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      understandingMap = json.data;
+      updateWeakCount();
+    }
+  } catch (e) {
+    console.warn('理解度データ取得失敗', e);
+  }
+}
+
+// ============================================================
+// 理解度パネル表示・送信
+// ============================================================
+function showUnderstandingPanel(questionId, isCorrect) {
+  if (!currentUser) return;
+  pendingUnderstandingQuestionId = questionId;
+  const panel = document.getElementById('understanding-panel');
+  if (panel) panel.style.display = 'block';
+
+  document.querySelectorAll('.understanding-btn').forEach(btn => {
+    btn.onclick = async () => {
+      const level = parseInt(btn.dataset.level);
+      panel.style.display = 'none';
+      await saveUnderstanding(questionId, level, isCorrect);
+    };
+  });
+}
+
+async function saveUnderstanding(questionId, level, isCorrect) {
+  if (!currentUser) return;
+  understandingMap[questionId] = { understanding: level, isCorrect };
+  updateWeakCount();
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'saveUnderstanding',
+        token: currentUser.token,
+        questionId,
+        understanding: level,
+        isCorrect
+      })
+    });
+  } catch (e) {
+    console.warn('理解度送信失敗', e);
+  }
+}
+
+// ============================================================
+// 苦手問題演習
+// ============================================================
+function setupWeakUI() {
+  const tabWeak = document.getElementById('tab-weak');
+  const panelWeak = document.getElementById('panel-weak');
+  const goBtnWeak = document.getElementById('go-btn-weak');
+  const showResultsBtnWeak = document.getElementById('show-results-btn-weak');
+  const weakSubjectFilter = document.getElementById('weak-subject-filter');
+
+  if (tabWeak) tabWeak.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    tabWeak.classList.add('active');
+    document.quer
