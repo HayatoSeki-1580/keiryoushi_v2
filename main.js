@@ -1182,7 +1182,7 @@ function setupLoginUI() {
   if (guestBtn) guestBtn.addEventListener('click', () => {
     currentUser = null;
     if (loginOverlay) loginOverlay.style.display = 'none';
-    if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'none';
     updateWeakTabVisibility();
   });
 
@@ -1209,7 +1209,7 @@ function setupLoginUI() {
         sessionStorage.setItem('currentUser', userId);
         await loadUnderstandingData();
         if (loginOverlay) loginOverlay.style.display = 'none';
-        if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+        if (welcomeOverlay) welcomeOverlay.style.display = 'none';
         updateWeakTabVisibility();
       } else {
         loginError.textContent = 'IDまたはパスワードが違います';
@@ -1228,7 +1228,7 @@ function setupLoginUI() {
   if (savedUser) {
     currentUser = { userId: savedUser };
     if (loginOverlay) loginOverlay.style.display = 'none';
-    if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'none';
     updateWeakTabVisibility();
     loadUnderstandingData();
   }
