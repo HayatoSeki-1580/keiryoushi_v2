@@ -291,7 +291,7 @@ async function renderPdf(edition, subject, pageNum = 1) {
 /** ジャンプ用プルダウン生成 */
 function populateJumpSelector(questions) {
     if (!jumpToSelect) return;
-    jumpToSelect.innerHTML = '<option value="">移動...</option>';
+        jumpToSelect.innerHTML = '<option value="">移動...</option>';
     if (Array.isArray(questions)) {
         questions.forEach((q, index) => {
             const option = document.createElement('option');
