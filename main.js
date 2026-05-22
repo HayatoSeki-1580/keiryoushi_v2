@@ -1,4 +1,7 @@
-const GAS_URL = 'https://script.google.com/a/macros/tanita.co.jp/s/AKfycbyKnq9OQuav2sAm4nQzUCxdVwHfPfiPYs3JQCi7wBN2xrNT8twBM8tyycjKTPleCUoY/exec';
+const SUPABASE_URL = 'https:/
+    /yxjoqcnzqvrtwfkldqpa.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4am9xY256cXZydHdma2xkcXBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDI2NTYsImV4cCI6MjA5NDk3ODY1Nn0.Dg7AfiUIN9XpAwRnQgnWwPIKjqo__r2fbh40YZDI3is';
+```__
 
 // --- モジュールのインポート ---
 import * as pdfjsLib from './lib/pdfjs/build/pdf.mjs';
@@ -107,20 +110,27 @@ async function loadFieldsData() {
 /** 難易度ファイル(difficulty.json)読込 */
 async function loadDifficultyData() {
   try {
-    const res = await fetch(`${GAS_URL}?action=getDifficulty`);
-    const json = await res.json();
-    if (json.status === 'ok') {
-      difficultyData = json.data;
-      console.log('難易度データをスプシから取得しました');
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?select=*`, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length > 0) {
+      difficultyData = rows;
+      difficultyMap = {};
+      rows.forEach(r => {
+        const id = `${r.edition}-${r.subject}-${r.question_num}`;
+        difficultyMap[id] = r.difficulty;
+      });
+      console.log('難易度データをSupabaseから取得しました');
       return;
     }
   } catch (e) {
-    console.warn('GAS取得失敗、ローカルにフォールバック', e);
+    console.warn('Supabase取得失敗、ローカルにフォールバック', e);
   }
-  // フォールバック：既存のdifficulty.json
   const res = await fetch('./data/difficulty.json');
   difficultyData = await res.json();
 }
+
 
 
 /** 解答JSON読込 */
@@ -1187,19 +1197,21 @@ function setupLoginUI() {
     loginBtn.disabled = true;
     try {
       const hash = await sha256(password);
-      const res = await fetch(GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'login', userId, passwordHash: hash })
-      });
-      const json = await res.json();
-      if (json.status === 'ok') {
-        currentUser = { userId, displayName: json.displayName, token: json.token };
+      // Supabaseでユーザー照合
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&password_hash=eq.${hash}&select=user_id`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        currentUser = { userId };
+        sessionStorage.setItem('currentUser', userId);
         await loadUnderstandingData();
         if (loginOverlay) loginOverlay.style.display = 'none';
         if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
         updateWeakTabVisibility();
       } else {
-        loginError.textContent = json.message || 'ログインに失敗しました';
+        loginError.textContent = 'IDまたはパスワードが違います';
         loginError.style.display = 'block';
       }
     } catch (e) {
@@ -1209,7 +1221,18 @@ function setupLoginUI() {
     loginBtn.textContent = 'ログイン';
     loginBtn.disabled = false;
   });
+
+  // セッション復元
+  const savedUser = sessionStorage.getItem('currentUser');
+  if (savedUser) {
+    currentUser = { userId: savedUser };
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+    updateWeakTabVisibility();
+    loadUnderstandingData();
+  }
 }
+
 
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
@@ -1224,16 +1247,19 @@ async function sha256(message) {
 async function loadUnderstandingData() {
   if (!currentUser) return;
   try {
-    const res = await fetch(`${GAS_URL}?action=getUnderstanding&token=${currentUser.token}`);
-    const json = await res.json();
-    if (json.status === 'ok') {
-      understandingMap = json.data;
-      updateWeakCount();
-    }
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/understanding?user_id=eq.${encodeURIComponent(currentUser.userId)}&select=question_id,level`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const rows = await res.json();
+    understandingMap = {};
+    rows.forEach(r => { understandingMap[r.question_id] = { understanding: r.level }; });
+    updateWeakCount();
   } catch (e) {
     console.warn('理解度データ取得失敗', e);
   }
 }
+
 
 // ============================================================
 // 理解度パネル表示・送信
@@ -1258,20 +1284,26 @@ async function saveUnderstanding(questionId, level, isCorrect) {
   understandingMap[questionId] = { understanding: level, isCorrect };
   updateWeakCount();
   try {
-    await fetch(GAS_URL, {
+    await fetch(`${SUPABASE_URL}/rest/v1/understanding`, {
       method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
       body: JSON.stringify({
-        action: 'saveUnderstanding',
-        token: currentUser.token,
-        questionId,
-        understanding: level,
-        isCorrect
+        user_id: currentUser.userId,
+        question_id: questionId,
+        level: level,
+        updated_at: new Date().toISOString()
       })
     });
   } catch (e) {
     console.warn('理解度送信失敗', e);
   }
 }
+
 
 // ============================================================
 // 苦手問題演習
