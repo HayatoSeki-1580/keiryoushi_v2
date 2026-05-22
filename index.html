@@ -106,6 +106,7 @@
             <button id="tab-by-edition" class="tab-btn active">年度別演習</button>
             <button id="tab-by-field" class="tab-btn">分野別演習</button>
             <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
+            <button id="tab-weak" class="tab-btn" style="opacity:0.5;" title="ログインが必要です">😵 苦手問題</button>
         </div>
 
         <div id="panel-by-edition" class="control-panel">
@@ -298,6 +299,36 @@
         </div>
 
     </div> 
+
+    <div id="panel-weak" class="control-panel hidden">
+  <div style="margin-bottom:12px;">
+    <p style="font-weight:bold;margin-bottom:8px;">対象の理解度：</p>
+    <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label><br>
+    <label><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label><br>
+    <label><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
+  </div>
+  <div style="margin-bottom:12px;">
+    <p style="font-weight:bold;margin-bottom:8px;">科目フィルター：</p>
+    <select id="weak-subject-filter" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
+      <option value="all">全科目</option>
+      <option value="houki">法規</option>
+      <option value="kanri">管理</option>
+      <option value="ichiki">一基</option>
+      <option value="keishitsu">計質</option>
+      <option value="kanka">環化</option>
+      <option value="kanbutsu">環物</option>
+      <option value="kannou">環濃</option>
+      <option value="kanon">環音</option>
+    </select>
+  </div>
+  <p id="weak-count" style="color:#666;font-size:14px;">対象問題数：ログインして確認</p>
+  <button id="go-btn-weak" style="padding:10px 24px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;">演習開始</button>
+  <div style="margin-top:12px;">
+    <span>正答数: <span class="score-correct">0</span></span>
+    <button id="show-results-btn-weak" style="margin-left:12px;padding:6px 14px;background:#7f8c8d;color:#fff;border:none;border-radius:4px;cursor:pointer;">成績を見る</button>
+  </div>
+</div>
+
 
     <div id="results-panel" class="hidden">
         <h2>成績一覧</h2>
