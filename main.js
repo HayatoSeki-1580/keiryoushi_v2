@@ -352,10 +352,12 @@ function updateNavButtons() {
 async function renderPageInternal(pdfPageNum) {
     if (!pdfDoc || !canvas) return;
     try {
-        let activePanel = panelByEdition;
-        if (!panelByField.classList.contains('hidden')) activePanel = panelByField;
-        if (!panelShuffle.classList.contains('hidden')) activePanel = panelShuffle;
-
+const panelWeakEl = document.getElementById('panel-weak');
+let activePanel = panelByEdition;
+if (panelWeakEl && !panelWeakEl.classList.contains('hidden')) activePanel = panelWeakEl;
+else if (!panelByField.classList.contains('hidden')) activePanel = panelByField;
+else if (!panelShuffle.classList.contains('hidden')) activePanel = panelShuffle;
+        
         const activeAnswerButtons = activePanel ? activePanel.querySelectorAll('.answer-btn') : [];
         activeAnswerButtons.forEach(btn => { 
             btn.className = 'answer-btn'; 
@@ -1174,8 +1176,7 @@ async function initialize() {
         btnExplanationShuffle = document.getElementById('btn-explanation-shuffle');
     btnExplanationWeak = document.getElementById('btn-explanation-weak');       // ← 追加
     resultAreaWeak = document.getElementById('result-area-weak');               // ← 追加
-    scoreCorrectWeak = document.getElementById('panel-weak') 
-        ? document.getElementById('panel-weak').querySelector('.score-correct') : null; // ← 追加
+    scoreCorrectWeak = document.getElementById('score-correct-weak');
     weakAnswerArea = document.getElementById('weak-answer-area');               // ← 追加
     explanationModal = document.getElementById('explanation-modal');
 
@@ -1345,14 +1346,16 @@ function setupWeakUI() {
   const showResultsBtnWeak = document.getElementById('show-results-btn-weak');
   const weakSubjectFilter = document.getElementById('weak-subject-filter');
 
-  if (tabWeak) tabWeak.addEventListener('click', () => {
+ if (tabWeak) tabWeak.addEventListener('click', () => {
+    // 全タブのactiveを外す
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     tabWeak.classList.add('active');
-    document.querySelectorAll('.control-panel').forEach(p => p.classList.add('hidden'));
+    // 全パネルを隠す
+    [panelByEdition, panelByField, panelShuffle].forEach(p => { if(p) p.classList.add('hidden'); });
     if (panelWeak) panelWeak.classList.remove('hidden');
     isExamMode = false;
     updateWeakCount();
-  });
+});
 
   if (weakSubjectFilter) weakSubjectFilter.addEventListener('change', updateWeakCount);
   document.querySelectorAll('input[name="weak-level"]').forEach(r => {
