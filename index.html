@@ -13,31 +13,25 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <style>
-        /* 解説ボタン（初期は非表示） */
         .explanation-btn {
-            background-color: #28a745; /* 緑色 */
+            background-color: #28a745;
             color: white;
             margin-left: 10px;
         }
         .explanation-btn:hover { background-color: #218838; }
 
-        /* モーダル全体のスタイル */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.5); /* 背景を暗く */
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
         }
-
-        /* モーダルコンテンツ */
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto; 
+            margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
@@ -46,8 +40,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             position: relative;
         }
-
-        /* 閉じるボタン */
         .close-modal {
             color: #aaa;
             float: right;
@@ -55,19 +47,9 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .close-modal:hover,
-        .close-modal:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
+        .close-modal:hover, .close-modal:focus { color: black; text-decoration: none; cursor: pointer; }
 
-        /* 解説本文のスタイル */
-        #explanation-body {
-            line-height: 1.6;
-            margin-top: 10px;
-            font-size: 16px;
-        }
+        #explanation-body { line-height: 1.6; margin-top: 10px; font-size: 16px; }
         #explanation-body h3 { border-bottom: 2px solid #ddd; padding-bottom: 5px; }
         #explanation-body code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
         #explanation-body blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 10px; color: #555; }
@@ -77,29 +59,28 @@
     <h1>計量士国家試験 演習ブラウザ</h1>
 
     <!-- ログインオーバーレイ -->
-<div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;">
-  <div style="background:#fff;padding:40px;border-radius:12px;width:320px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-    <h2 style="margin-bottom:24px;color:#2c3e50;">計量士国家試験<br>演習ブラウザ</h2>
-    <input id="login-userid" type="text" placeholder="ユーザーID" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
-    <input id="login-password" type="password" placeholder="パスワード" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
-    <div id="login-error" style="color:red;font-size:13px;margin-bottom:12px;display:none;"></div>
-    <button id="login-btn" style="width:100%;padding:12px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin-bottom:12px;">ログイン</button>
-    <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
-    <button id="guest-btn" style="width:100%;padding:10px;background:#95a5a6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">ゲストとして演習を始める</button>
-  </div>
-</div>
+    <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:40px;border-radius:12px;width:320px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+        <h2 style="margin-bottom:24px;color:#2c3e50;">計量士国家試験<br>演習ブラウザ</h2>
+        <input id="login-userid" type="text" placeholder="ユーザーID" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
+        <input id="login-password" type="password" placeholder="パスワード" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
+        <div id="login-error" style="color:red;font-size:13px;margin-bottom:12px;display:none;"></div>
+        <button id="login-btn" style="width:100%;padding:12px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin-bottom:12px;">ログイン</button>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+        <button id="guest-btn" style="width:100%;padding:10px;background:#95a5a6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">ゲストとして演習を始める</button>
+      </div>
+    </div>
 
-<!-- 理解度パネル -->
-<div id="understanding-panel" style="display:none;position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:3px solid #2980b9;padding:16px;text-align:center;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.15);">
-  <p style="margin:0 0 12px;font-size:15px;font-weight:bold;color:#2c3e50;">この問題の理解度を教えてください</p>
-  <div style="display:flex;justify-content:center;gap:12px;">
-    <button class="understanding-btn" data-level="1" style="padding:10px 20px;font-size:14px;border:2px solid #e74c3c;background:#fff;color:#e74c3c;border-radius:8px;cursor:pointer;">❌ 不可</button>
-    <button class="understanding-btn" data-level="2" style="padding:10px 20px;font-size:14px;border:2px solid #f39c12;background:#fff;color:#f39c12;border-radius:8px;cursor:pointer;">🔁 要復習</button>
-    <button class="understanding-btn" data-level="3" style="padding:10px 20px;font-size:14px;border:2px solid #27ae60;background:#fff;color:#27ae60;border-radius:8px;cursor:pointer;">✅ 完璧！</button>
-  </div>
-</div>
+    <!-- 理解度パネル -->
+    <div id="understanding-panel" style="display:none;position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:3px solid #2980b9;padding:16px;text-align:center;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.15);">
+      <p style="margin:0 0 12px;font-size:15px;font-weight:bold;color:#2c3e50;">この問題の理解度を教えてください</p>
+      <div style="display:flex;justify-content:center;gap:12px;">
+        <button class="understanding-btn" data-level="1" style="padding:10px 20px;font-size:14px;border:2px solid #e74c3c;background:#fff;color:#e74c3c;border-radius:8px;cursor:pointer;">❌ 不可</button>
+        <button class="understanding-btn" data-level="2" style="padding:10px 20px;font-size:14px;border:2px solid #f39c12;background:#fff;color:#f39c12;border-radius:8px;cursor:pointer;">🔁 要復習</button>
+        <button class="understanding-btn" data-level="3" style="padding:10px 20px;font-size:14px;border:2px solid #27ae60;background:#fff;color:#27ae60;border-radius:8px;cursor:pointer;">✅ 完璧！</button>
+      </div>
+    </div>
 
-    
     <div id="exercise-view">
 
         <div class="mode-tabs">
@@ -109,6 +90,7 @@
             <button id="tab-weak" class="tab-btn" style="opacity:0.5;" title="ログインが必要です">😵 苦手問題</button>
         </div>
 
+        <!-- 年度別演習パネル -->
         <div id="panel-by-edition" class="control-panel">
             <div class="top-row">
                 <div class="select-group">
@@ -128,7 +110,6 @@
                         <option value="kanon">環音</option>
                     </select>
                 </div>
-                
                 <div class="filter-group">
                     <span class="filter-label">難易度:</span>
                     <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
@@ -136,9 +117,7 @@
                     <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
                     <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
                 </div>
-
                 <button id="go-btn-edition">表示</button>
-
                 <div class="toggle-group">
                     <label for="toggle-diff-edition">難易度を表示</label>
                     <input type="checkbox" id="toggle-diff-edition" class="difficulty-toggle-checkbox" checked>
@@ -164,8 +143,9 @@
             </div>
         </div>
 
+        <!-- 分野別演習パネル -->
         <div id="panel-by-field" class="control-panel hidden">
-             <div class="top-row">
+            <div class="top-row">
                  <div class="select-group">
                      <label for="subject-select-field">科目:</label>
                      <select id="subject-select-field">
@@ -180,7 +160,7 @@
                      </select>
                  </div>
                  <div class="select-group">
-                     <label>分野:</label> 
+                     <label>分野: </label>
                      <div id="field-select-custom" class="custom-select">
                          <div class="select-selected">分野を選択...</div>
                          <div class="select-items select-hide"></div>
@@ -195,23 +175,23 @@
                     <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
                 </div>
 
-                 <button id="go-btn-field">表示</button>
+                <button id="go-btn-field">表示</button>
 
-                 <div class="toggle-group">
+                <div class="toggle-group">
                     <label for="toggle-diff-field">難易度を表示</label>
                     <input type="checkbox" id="toggle-diff-field" class="difficulty-toggle-checkbox" checked>
                 </div>
              </div>
             <div class="actions-row">
-                 <div class="answer-group">
-                    <span class="answer-label">解答:</span>
-                    <div class="answer-buttons">
-                        <button class="answer-btn" data-choice="1">1</button>
-                        <button class="answer-btn" data-choice="2">2</button>
-                        <button class="answer-btn" data-choice="3">3</button>
-                        <button class="answer-btn" data-choice="4">4</button>
-                        <button class="answer-btn" data-choice="5">5</button>
-                    </div>
+                <div class="answer-group">
+                   <span class="answer-label">解答:</span>
+                   <div class="answer-buttons">
+                       <button class="answer-btn" data-choice="1">1</button>
+                       <button class="answer-btn" data-choice="2">2</button>
+                       <button class="answer-btn" data-choice="3">3</button>
+                       <button class="answer-btn" data-choice="4">4</button>
+                       <button class="answer-btn" data-choice="5">5</button>
+                   </div>
                 </div>
                 <div id="score-counter-field" class="score-counter">
                     正答数: <span class="score-correct">0</span>
@@ -222,6 +202,7 @@
             </div>
         </div>
 
+        <!-- シャッフル演習パネル -->
         <div id="panel-shuffle" class="control-panel hidden">
             <div class="top-row">
                 <div class="subject-checkbox-container">
@@ -259,29 +240,75 @@
                        <button class="answer-btn" data-choice="4">4</button>
                        <button class="answer-btn" data-choice="5">5</button>
                    </div>
-               </div>
+                </div>
                
-               <div id="score-counter-shuffle" class="score-counter">
-                   正答数: <span class="score-correct">0</span>
-               </div>
+                <div id="score-counter-shuffle" class="score-counter">
+                    正答数: <span class="score-correct">0</span>
+                </div>
                
-               <button id="finish-exam-btn" class="results-btn hidden">試験終了</button>
-               <button id="show-results-btn-shuffle" class="results-btn hidden">成績を見る</button>
-               <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
-               
-               <div id="result-area-shuffle" class="result-area"></div>
-           </div>
-       </div>
+                <button id="finish-exam-btn" class="results-btn hidden">試験終了</button>
+                <button id="show-results-btn-shuffle" class="results-btn hidden">成績を見る</button>
+                <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
+                
+                <div id="result-area-shuffle" class="result-area"></div>
+            </div>
+        </div>
 
+        <!-- 苦手問題パネル（他パネルと同列・exercise-view 内に正しく配置） -->
+        <div id="panel-weak" class="control-panel hidden">
+            <!-- 設定行 -->
+            <div class="top-row">
+                <div>
+                    <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
+                    <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label>
+                    <label style="margin-left:12px;"><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label>
+                    <label style="margin-left:12px;"><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
+                </div>
+                <div style="margin-top:8px;">
+                    <label style="font-weight:bold;">科目フィルター：</label>
+                    <select id="weak-subject-filter">
+                        <option value="all">全科目</option>
+                        <option value="houki">法規</option>
+                        <option value="kanri">管理</option>
+                        <option value="ichiki">一基</option>
+                        <option value="keishitsu">計質</option>
+                        <option value="kanka">環化</option>
+                        <option value="kanbutsu">環物</option>
+                        <option value="kannou">環濃</option>
+                        <option value="kanon">環音</option>
+                    </select>
+                </div>
+                <p id="weak-count" style="margin:8px 0 0;font-weight:bold;color:#555;">対象問題数：ログインして確認</p>
+                <button id="go-btn-weak" style="margin-top:8px;padding:05em 12em;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1em;">演習開始</button>
+            </div>
+            <!-- 解答行（年度別演習と同じ actions-row 構造） -->
+            <div id="weak-answer-area" class="actions-row" style="display:none;">
+                <div class="answer-group">
+                    <span class="answer-label">解答:</span>
+                    <div class="answer-buttons">
+                        <button class="answer-btn" data-choice="1">1</button>
+                        <button class="answer-btn" data-choice="2">2</button>
+                        <button class="answer-btn" data-choice="3">3</button>
+                        <button class="answer-btn" data-choice="4">4</button>
+                        <button class="answer-btn" data-choice="5">5</button>
+                    </div>
+                </div>
+                <div id="result-area-weak" class="result-area"></div>
+                <button id="btn-explanation-weak" class="explanation-btn hidden">解説を見る</button>
+                <div class="score-counter">正答数: <span id="score-correct-weak" class="score-correct">0</span></div>
+                <button id="show-results-btn-weak" class="results-btn">成績を見る</button>
+            </div>
+        </div>
+
+        <!-- ナビゲーション -->
         <div class="navigation">
             <button id="prev-btn">◀ 前の問題</button>
             <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
             <span id="difficulty-badge" class="difficulty-badge hidden"></span>
             <span id="exam-timer" class="exam-timer hidden">00:00</span>
-
             <button id="next-btn">次の問題 ▶</button>
             <select id="jump-to-select" class="jump-select">
-                <option value="">移動...</option>
+                <option value="">ジャンプ...</option>
             </select>
             <span id="question-source" class="source-info"></span>
         </div>
@@ -298,90 +325,6 @@
             <canvas id="pdf-canvas"></canvas>
         </div>
 
-    </div> 
-
-    <div id="panel-weak" class="control-panel hidden">
-  <div style="margin-bottom:12px;">
-    <p style="font-weight:bold;margin-bottom:8px;">対象の理解度：</p>
-    <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label><br>
-    <label><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label><br>
-    <label><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
-  </div>
-  <div style="margin-bottom:12px;">
-    <p style="font-weight:bold;margin-bottom:8px;">科目フィルター：</p>
-    <select id="weak-subject-filter" style="padding:6px;border-radius:4px;border:1px solid #ccc;">
-      <option value="all">全科目</option>
-      <option value="houki">法規</option>
-      <option value="kanri">管理</option>
-      <option value="ichiki">一基</option>
-      <option value="keishitsu">計質</option>
-      <option value="kanka">環化</option>
-      <option value="kanbutsu">環物</option>
-      <option value="kannou">環濃</option>
-      <option value="kanon">環音</option>
-    </select>
-  </div>
-  <p id="weak-count" style="color:#666;font-size:14px;">対象問題数：ログインして確認</p>
-  <button id="go-btn-weak" style="padding:10px 24px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;">演習開始</button>
- <div id="weak-answer-area" style="display:none; margin-top:12px;">
-  <div class="answer-group">
-    <span class="answer-label">解答:</span>
-    <div class="answer-buttons">
-      <button class="answer-btn" data-choice="1">1</button>
-      <button class="answer-btn" data-choice="2">2</button>
-      <button class="answer-btn" data-choice="3">3</button>
-      <button class="answer-btn" data-choice="4">4</button>
-                  <button class="answer-btn" data-choice="5">5</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ↓ panel-weak は独立したパネルとして正しく構成する -->
-    <div id="panel-weak" class="control-panel hidden">
-      <!-- 設定行 -->
-      <div class="top-row">
-        <div>
-          <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
-          <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label>
-          <label style="margin-left:12px;"><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label>
-          <label style="margin-left:12px;"><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
-        </div>
-        <div style="margin-top:8px;">
-          <label style="font-weight:bold;">科目フィルター：</label>
-          <select id="weak-subject-filter">
-            <option value="all">全科目</option>
-            <option value="houki">法規</option>
-            <option value="kanri">管理</option>
-            <option value="ichiki">一基</option>
-            <option value="keishitsu">計質</option>
-            <option value="kanka">環化</option>
-            <option value="kanbutsu">環物</option>
-            <option value="kannou">環濃</option>
-            <option value="kanon">環音</option>
-          </select>
-        </div>
-        <p id="weak-count" style="margin:8px 0 0;font-weight:bold;color:#555;">対象問題数：ログインして確認</p>
-        <button id="go-btn-weak" style="margin-top:8px;padding:05em 1.2em;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1em;">演習開始</button>
-      </div>
-
-      <!-- 解答行（年度別演習と同じ actions-row 構造） -->
-      <div id="weak-answer-area" class="actions-row" style="display:none;">
-        <div class="answer-group">
-          <span class="answer-label">解答:</span>
-          <div class="answer-buttons">
-            <button class="answer-btn" data-choice="1">1</button>
-            <button class="answer-btn" data-choice="2">2</button>
-            <button class="answer-btn" data-choice="3">3</button>
-            <button class="answer-btn" data-choice="4">4</button>
-            <button class="answer-btn" data-choice="5">5</button>
-          </div>
-        </div>
-        <div id="result-area-weak" class="result-area"></div>
-        <button id="btn-explanation-weak" class="explanation-btn hidden">解説を見る</button>
-        <div class="score-counter">正答数: <span id="score-correct-weak" class="score-correct">0</span></div>
-        <button id="show-results-btn-weak" class="results-btn">成績を見る</button>
-      </div>
     </div>
 
     <div id="results-panel" class="hidden">
@@ -405,7 +348,7 @@
                     </div>
                 </div>
                 <div class="cert-time-area">
-                    解答時間: <span id="cert-time-value">--:--</span>
+                     解答時間: <span id="cert-time-value">--:--</span>
                 </div>
                 
                 <div class="cert-details">
@@ -438,7 +381,7 @@
             <span class="close-modal">&times;</span>
             <h2 id="explanation-title">解説</h2>
             <div id="explanation-body">
-                </div>
+            </div>
         </div>
     </div>
 
