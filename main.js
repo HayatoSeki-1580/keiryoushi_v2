@@ -1428,19 +1428,32 @@ function parseDifficulty(str) {
 }
 
 function setupCsvUploadUI() {
-  // UIを動的に生成
+  // 既存のfooterやナビの邪魔にならないよう、隠しアクセス方式に変更
+  // タイトルを5回タップ/クリックで表示
+  let tapCount = 0;
+  let tapTimer = null;
+
+  const titleEl = document.querySelector('h1') || document.querySelector('.app-title') || document.body;
+  titleEl.addEventListener('click', () => {
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+    if (tapCount >= 5) {
+      tapCount = 0;
+      const panel = document.getElementById('csv-upload-panel');
+      if (panel) {
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+  });
+
   const container = document.createElement('div');
   container.id = 'csv-upload-container';
-  container.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9999;';
+  container.style.cssText = 'position:fixed; bottom:80px; right:16px; z-index:9999;';
 
   container.innerHTML = `
-    <button id="csv-upload-toggle" style="
-      background:#4a90d9; color:#fff; border:none; border-radius:8px;
-      padding:8px 14px; font-size:13px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
-      📊 難易度CSV更新
-    </button>
     <div id="csv-upload-panel" style="
-      display:none; margin-top:8px; background:#fff; border:1px solid #ccc;
+      display:none; background:#fff; border:1px solid #ccc;
       border-radius:10px; padding:16px; width:280px;
       box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:13px;">
       <div style="font-weight:bold; margin-bottom:8px;">📊 難易度データ更新</div>
@@ -1454,11 +1467,6 @@ function setupCsvUploadUI() {
     </div>
   `;
   document.body.appendChild(container);
-
-  document.getElementById('csv-upload-toggle').addEventListener('click', () => {
-    const panel = document.getElementById('csv-upload-panel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  });
 
   document.getElementById('csv-upload-btn').addEventListener('click', async () => {
     const fileInput = document.getElementById('csv-file-input');
@@ -1477,30 +1485,22 @@ function setupCsvUploadUI() {
     try {
       const text = await file.text();
       const rows = text.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
-
-      // 1行目: ヘッダー（例: 法規, 76回(R7), 75回(R6),）
       const header = rows[0];
-      const subjectRaw = header[0]; // 例: "法規"
+      const subjectRaw = header[0];
       const subject = subjectNameToKey[subjectRaw] || subjectRaw;
-
-      // 回次リスト（2列目以降）
       const editions = header.slice(1).map(parseEdition);
-
       const records = [];
 
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
-        if (!row[0] || !row[0].startsWith('問')) continue; // 空行・集計行スキップ
-
+        if (!row[0] || !row[0].startsWith('問')) continue;
         const questionNum = parseInt(row[0].replace('問', ''));
         if (isNaN(questionNum)) continue;
-
         for (let j = 1; j < row.length; j++) {
           const edition = editions[j - 1];
           if (!edition) continue;
           const difficulty = parseDifficulty(row[j]);
           if (!difficulty) continue;
-
           records.push({ subject, edition, question_num: questionNum, difficulty });
         }
       }
@@ -1511,7 +1511,6 @@ function setupCsvUploadUI() {
         return;
       }
 
-      // Supabaseにupsert
       const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty`, {
         method: 'POST',
         headers: {
@@ -1526,20 +1525,19 @@ function setupCsvUploadUI() {
       if (res.ok) {
         status.textContent = `✅ ${records.length}件を更新しました！`;
         status.style.color = 'green';
-        // 難易度データを再読み込み
         await loadDifficultyData();
       } else {
         const err = await res.text();
         status.textContent = `❌ エラー: ${err}`;
         status.style.color = 'red';
       }
-
     } catch (e) {
       status.textContent = `❌ 処理エラー: ${e.message}`;
       status.style.color = 'red';
     }
   });
 }
+
 
 
 document.addEventListener('DOMContentLoaded', initialize);
