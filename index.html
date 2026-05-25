@@ -323,7 +323,21 @@
   </div>
   <p id="weak-count" style="color:#666;font-size:14px;">対象問題数：ログインして確認</p>
   <button id="go-btn-weak" style="padding:10px 24px;background:#e74c3c;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;">演習開始</button>
-  <div style="margin-top:12px;">
+ <div id="weak-answer-area" style="display:none; margin-top:12px;">
+  <div class="answer-group">
+    <span class="answer-label">解答:</span>
+    <div class="answer-buttons">
+      <button class="answer-btn" data-choice="1">1</button>
+      <button class="answer-btn" data-choice="2">2</button>
+      <button class="answer-btn" data-choice="3">3</button>
+      <button class="answer-btn" data-choice="4">4</button>
+      <button class="answer-btn" data-choice="5">5</button>
+    </div>
+  </div>
+  <div id="result-area-weak" class="result-area"></div>
+  <button id="btn-explanation-weak" class="explanation-btn hidden" style="margin-top:6px;">解説を見る</button>
+</div>
+        <div style="margin-top:12px;">
     <span>正答数: <span class="score-correct">0</span></span>
     <button id="show-results-btn-weak" style="margin-left:12px;padding:6px 14px;background:#7f8c8d;color:#fff;border:none;border-radius:4px;cursor:pointer;">成績を見る</button>
   </div>
