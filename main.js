@@ -2,10 +2,11 @@ const SUPABASE_URL = 'https://yxjoqcnzqvrtwfkldqpa.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4am9xY256cXZydHdma2xkcXBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDI2NTYsImV4cCI6MjA5NDk3ODY1Nn0.Dg7AfiUIN9XpAwRnQgnWwPIKjqo__r2fbh40YZDI3is';
 
 // --- モジュールのインポート ---
-import * as pdfjsLib from './lib/pdfjs/build/pdf.mjs';
+import * as pdfjsLib 
+    from './lib/pdfjs/build/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
 
-// --- グローバル変数 ---
+// --- グローバル変数 ---xplanationEdition, btnExplanat
 let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     pageNumSpan, pageCountSpan, prevBtn, nextBtn, jumpToSelect,
     tabByEdition, tabByField, tabShuffle,
@@ -23,6 +24,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
 
 // 解説機能用の変数
 let btnExplanationEdition, btnExplanationField, btnExplanationShuffle, explanationModal, explanationBody, explanationTitle, closeModalSpan;
+let btnExplanationWeak, resultAreaWeak, scoreCorrectWeak, weakAnswerArea;
 let currentExplanations = {}; 
 
 let pdfDoc = null;
@@ -363,6 +365,7 @@ async function renderPageInternal(pdfPageNum) {
         if(btnExplanationEdition) btnExplanationEdition.classList.add('hidden');
         if(btnExplanationField) btnExplanationField.classList.add('hidden');
         if(btnExplanationShuffle) btnExplanationShuffle.classList.add('hidden');
+        if(btnExplanationWeak) btnExplanationWeak.classList.add('hidden');
         
         // 試験終了ボタン制御
         if (isExamMode && finishExamBtn && nextBtn) {
@@ -411,22 +414,27 @@ async function renderPageInternal(pdfPageNum) {
             
             const currentQuestionId = getQuestionId(question.edition, subject, question.pageNum);
             
-            if(resultAreaEdition) resultAreaEdition.textContent = '';
+   　       if(resultAreaEdition) resultAreaEdition.textContent = '';
             if(resultAreaField) resultAreaField.textContent = '';
             if(resultAreaShuffle) resultAreaShuffle.textContent = '';
+            if(resultAreaWeak) resultAreaWeak.textContent = '';
+
             
             updateNavButtons();
             updateDifficultyDisplay(currentQuestionId);
 
             // 履歴確認
             const history = answerHistory[currentQuestionId];
+            const panelWeakRef = document.getElementById('panel-weak');
             let activeResultArea = resultAreaEdition;
             if (activePanel === panelByField) activeResultArea = resultAreaField;
             if (activePanel === panelShuffle) activeResultArea = resultAreaShuffle;
+            if (panelWeakRef && activePanel === panelWeakRef) activeResultArea = resultAreaWeak;
 
             let activeExplanationBtn = btnExplanationEdition;
             if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
             if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
+            if (panelWeakRef && activePanel === panelWeakRef) activeExplanationBtn = btnExplanationWeak;
 
             // 未解答かつ試験モードならタイマーをスタート（再開）
             if (isExamMode && !history) {
@@ -528,6 +536,7 @@ function updateScoreDisplay() {
     if(scoreCorrectEdition) scoreCorrectEdition.textContent = correctCount;
     if(scoreCorrectField) scoreCorrectField.textContent = correctCount;
     if(scoreCorrectShuffle) scoreCorrectShuffle.textContent = correctCount;
+    if(scoreCorrectWeak) scoreCorrectWeak.textContent = correctCount; // ← 追加
 }
 
 /** 正誤判定 */
@@ -541,10 +550,10 @@ function checkAnswer(selectedChoice) {
     let resultArea;
     let explanationBtn;
 
-    if (isWeakActive) {
-        activePanel = panelShuffle; // ← answer-btn はpanelShuffleにある
-        resultArea = resultAreaShuffle;
-        explanationBtn = btnExplanationShuffle;
+        if (isWeakActive) {
+        activePanel = document.getElementById('panel-weak');
+        resultArea = resultAreaWeak;
+        explanationBtn = btnExplanationWeak;
     } else if (!panelByField.classList.contains('hidden')) {
         activePanel = panelByField;
         resultArea = resultAreaField;
@@ -1078,6 +1087,7 @@ function setupEventListeners() {
     if (btnExplanationEdition) btnExplanationEdition.addEventListener('click', showExplanationModal);
     if (btnExplanationField) btnExplanationField.addEventListener('click', showExplanationModal);
     if (btnExplanationShuffle) btnExplanationShuffle.addEventListener('click', showExplanationModal);
+    if (btnExplanationWeak) btnExplanationWeak.addEventListener('click', showExplanationModal);
 
     if (closeModalSpan) closeModalSpan.addEventListener('click', () => { explanationModal.style.display = "none"; });
     window.addEventListener('click', (e) => {
@@ -1161,8 +1171,14 @@ async function initialize() {
     // 解説機能
     btnExplanationEdition = document.getElementById('btn-explanation-edition');
     btnExplanationField = document.getElementById('btn-explanation-field');
-    btnExplanationShuffle = document.getElementById('btn-explanation-shuffle');
+        btnExplanationShuffle = document.getElementById('btn-explanation-shuffle');
+    btnExplanationWeak = document.getElementById('btn-explanation-weak');       // ← 追加
+    resultAreaWeak = document.getElementById('result-area-weak');               // ← 追加
+    scoreCorrectWeak = document.getElementById('panel-weak') 
+        ? document.getElementById('panel-weak').querySelector('.score-correct') : null; // ← 追加
+    weakAnswerArea = document.getElementById('weak-answer-area');               // ← 追加
     explanationModal = document.getElementById('explanation-modal');
+
     explanationBody = document.getElementById('explanation-body');
     explanationTitle = document.getElementById('explanation-title');
     closeModalSpan = document.querySelector('.close-modal');
@@ -1357,7 +1373,7 @@ function setupWeakUI() {
 
     if (pageCountSpan) pageCountSpan.textContent = questions.length;
     populateJumpSelector(questions);
-
+    if (weakAnswerArea) weakAnswerArea.style.display = 'block';
     showLoading(true);
     currentFieldIndex = 0;
     await displayFieldQuestion(0);
