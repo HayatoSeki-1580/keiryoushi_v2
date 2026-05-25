@@ -538,7 +538,13 @@ function checkAnswer(selectedChoice) {
     let resultArea = resultAreaEdition;
     let explanationBtn = btnExplanationEdition;
     
-    if (!panelByField.classList.contains('hidden')) {
+    const panelWeak = document.getElementById('panel-weak');
+
+    if (panelWeak && !panelWeak.classList.contains('hidden')) {
+        activePanel = panelWeak;
+        resultArea = document.getElementById('result-area-shuffle'); // 苦手はシャッフルと同じresultAreaを流用
+        explanationBtn = btnExplanationShuffle;
+    } else if (!panelByFieldclassList.contains('hidden')) {
         activePanel = panelByField;
         resultArea = resultAreaField;
         explanationBtn = btnExplanationField;
@@ -575,10 +581,7 @@ function checkAnswer(selectedChoice) {
         return;
     }
 
-    // 解答したらタイマー停止
-    if (isExamMode) {
-        stopTimer();
-    }
+    if (isExamMode) { stopTimer(); }
 
     const isCorrect = parseInt(selectedChoice, 10) === correctAnswer;
     answerHistory[questionId] = { selected: selectedChoice, correct: isCorrect, correctAnswer: correctAnswer };
@@ -595,7 +598,7 @@ function checkAnswer(selectedChoice) {
         if (selectedButton) selectedButton.classList.add('incorrect-selection');
         if (correctButton) correctButton.classList.add('correct-answer');
     }
-    if(explanationBtn) explanationBtn.classList.remove('hidden');
+    if (explanationBtn) explanationBtn.classList.remove('hidden');
 
     activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
 
@@ -604,6 +607,7 @@ function checkAnswer(selectedChoice) {
         showUnderstandingPanel(questionId, isCorrect);
     }
 }
+
 
 
 /** 試験終了処理 */
