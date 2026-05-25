@@ -568,7 +568,7 @@ function checkAnswer(selectedChoice) {
     let subjectKey;
     let questionPageNum;
 
-    if (currentFieldQuestionslength > 0 && currentFieldQuestions[currentFieldIndex]) {
+ if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         questionPageNum = q.pageNum;
