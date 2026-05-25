@@ -534,17 +534,18 @@ function updateScoreDisplay() {
 function checkAnswer(selectedChoice) {
     const questionId = getCurrentQuestionId();
     
-    let activePanel = panelByEdition;
-    let resultArea = resultAreaEdition;
-    let explanationBtn = btnExplanationEdition;
-    
     const panelWeak = document.getElementById('panel-weak');
+    const isWeakActive = panelWeak && !panelWeak.classList.contains('hidden');
 
-    if (panelWeak && !panelWeak.classList.contains('hidden')) {
-        activePanel = panelWeak;
-        resultArea = document.getElementById('result-area-shuffle'); // 苦手はシャッフルと同じresultAreaを流用
+    let activePanel;
+    let resultArea;
+    let explanationBtn;
+
+    if (isWeakActive) {
+        activePanel = panelShuffle; // ← answer-btn はpanelShuffleにある
+        resultArea = resultAreaShuffle;
         explanationBtn = btnExplanationShuffle;
-    } else if (!panelByFieldclassList.contains('hidden')) {
+    } else if (!panelByField.classList.contains('hidden')) {
         activePanel = panelByField;
         resultArea = resultAreaField;
         explanationBtn = btnExplanationField;
@@ -552,6 +553,10 @@ function checkAnswer(selectedChoice) {
         activePanel = panelShuffle;
         resultArea = resultAreaShuffle;
         explanationBtn = btnExplanationShuffle;
+    } else {
+        activePanel = panelByEdition;
+        resultArea = resultAreaEdition;
+        explanationBtn = btnExplanationEdition;
     }
 
     if (!resultArea || !activePanel) return;
@@ -563,7 +568,7 @@ function checkAnswer(selectedChoice) {
     let subjectKey;
     let questionPageNum;
 
-    if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
+    if (currentFieldQuestionslength > 0 && currentFieldQuestions[currentFieldIndex]) {
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         questionPageNum = q.pageNum;
@@ -607,6 +612,7 @@ function checkAnswer(selectedChoice) {
         showUnderstandingPanel(questionId, isCorrect);
     }
 }
+
 
 
 
