@@ -331,18 +331,58 @@
       <button class="answer-btn" data-choice="2">2</button>
       <button class="answer-btn" data-choice="3">3</button>
       <button class="answer-btn" data-choice="4">4</button>
-      <button class="answer-btn" data-choice="5">5</button>
+                  <button class="answer-btn" data-choice="5">5</button>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div id="result-area-weak" class="result-area"></div>
-  <button id="btn-explanation-weak" class="explanation-btn hidden" style="margin-top:6px;">解説を見る</button>
-</div>
-        <div style="margin-top:12px;">
-    <span>正答数: <span class="score-correct">0</span></span>
-    <button id="show-results-btn-weak" style="margin-left:12px;padding:6px 14px;background:#7f8c8d;color:#fff;border:none;border-radius:4px;cursor:pointer;">成績を見る</button>
-  </div>
-</div>
 
+    <!-- ↓ panel-weak は独立したパネルとして正しく構成する -->
+    <div id="panel-weak" class="control-panel hidden">
+      <!-- 設定行 -->
+      <div class="top-row">
+        <div>
+          <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
+          <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label>
+          <label style="margin-left:12px;"><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label>
+          <label style="margin-left:12px;"><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
+        </div>
+        <div style="margin-top:8px;">
+          <label style="font-weight:bold;">科目フィルター：</label>
+          <select id="weak-subject-filter">
+            <option value="all">全科目</option>
+            <option value="houki">法規</option>
+            <option value="kanri">管理</option>
+            <option value="ichiki">一基</option>
+            <option value="keishitsu">計質</option>
+            <option value="kanka">環化</option>
+            <option value="kanbutsu">環物</option>
+            <option value="kannou">環濃</option>
+            <option value="kanon">環音</option>
+          </select>
+        </div>
+        <p id="weak-count" style="margin:8px 0 0;font-weight:bold;color:#555;">対象問題数：ログインして確認</p>
+        <button id="go-btn-weak" style="margin-top:8px;padding:05em 1.2em;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1em;">演習開始</button>
+      </div>
+
+      <!-- 解答行（年度別演習と同じ actions-row 構造） -->
+      <div id="weak-answer-area" class="actions-row" style="display:none;">
+        <div class="answer-group">
+          <span class="answer-label">解答:</span>
+          <div class="answer-buttons">
+            <button class="answer-btn" data-choice="1">1</button>
+            <button class="answer-btn" data-choice="2">2</button>
+            <button class="answer-btn" data-choice="3">3</button>
+            <button class="answer-btn" data-choice="4">4</button>
+            <button class="answer-btn" data-choice="5">5</button>
+          </div>
+        </div>
+        <div id="result-area-weak" class="result-area"></div>
+        <button id="btn-explanation-weak" class="explanation-btn hidden">解説を見る</button>
+        <div class="score-counter">正答数: <span id="score-correct-weak" class="score-correct">0</span></div>
+        <button id="show-results-btn-weak" class="results-btn">成績を見る</button>
+      </div>
+    </div>
 
     <div id="results-panel" class="hidden">
         <h2>成績一覧</h2>
