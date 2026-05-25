@@ -839,23 +839,30 @@ function setupEventListeners() {
     const tabs = [tabByEdition, tabByField, tabShuffle];
     const panels = [panelByEdition, panelByField, panelShuffle];
 
-    if (tabByEdition) tabByEdition.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
-        panels.forEach(p => p.classList.add('hidden')); panelByEdition.classList.remove('hidden');
-        if(questionSource) questionSource.style.display = 'none';
-        isExamMode = false;
-    });
-    if (tabByField) tabByField.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
-        panels.forEach(p => p.classList.add('hidden')); panelByField.classList.remove('hidden');
-        isExamMode = false;
-    });
-    if (tabShuffle) tabShuffle.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
-        panels.forEach(p => p.classList.add('hidden')); panelShuffle.classList.remove('hidden');
-        isExamMode = false; 
-    });
+   const panelWeakEl = document.getElementById('panel-weak');
 
+if (tabByEdition) tabByEdition.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
+    panels.forEach(p => p.classList.add('hidden'));
+    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
+    panelByEdition.classList.remove('hidden');
+    if(questionSource) questionSource.style.display = 'none';
+    isExamMode = false;
+});
+if (tabByField) tabByField.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
+    panels.forEach(p => p.classList.add('hidden'));
+    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
+    panelByField.classList.remove('hidden');
+    isExamMode = false;
+});
+if (tabShuffle) tabShuffle.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
+    panels.forEach(p => p.classList.add('hidden'));
+    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
+    panelShuffle.classList.remove('hidden');
+    isExamMode = false; 
+});
     // 年度別「表示」
     if (goBtnEdition) goBtnEdition.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
