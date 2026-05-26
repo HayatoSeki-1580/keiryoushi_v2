@@ -1313,9 +1313,20 @@ function showUnderstandingPanel(questionId, isCorrect) {
       const level = parseInt(btn.dataset.level);
       panel.style.display = 'none';
       await saveUnderstanding(questionId, level, isCorrect);
+
+      // ★ 理解度入力後、自動で次の問題へ移行
+      if (currentFieldIndex < currentFieldQuestions.length - 1) {
+        currentFieldIndex++;
+        displayFieldQuestion(currentFieldIndex);
+      } else if (isExamMode) {
+        // 試験モードで最終問題の場合は試験終了
+        finishExam();
+      }
+      // 最終問題かつ通常モードの場合は何もしない（現在の問題に留まる）
     };
   });
 }
+
 
 async function saveUnderstanding(questionId, level, isCorrect) {
   if (!currentUser) return;
