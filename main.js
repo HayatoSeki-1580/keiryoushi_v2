@@ -124,7 +124,7 @@ async function setupEditionSelector() {
         const response = await fetch('./data/editions.json');
         if (!response.ok) throw new Error(`HTTPエラー`);
         const data = await response.json();
-        const editions = data.availablesort((a, b) => b.value - a.value);
+        const editions = data.available.sort((a, b) => b.value - a.value);
         editionSelect.innerHTML = '';
         editions.forEach(info => {
             const option = document.createElement('option');
