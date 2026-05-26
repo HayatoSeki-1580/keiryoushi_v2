@@ -760,7 +760,8 @@ function closeCustomSelect() {
 function setupEventListeners() {
     answerButtonsNodeList = document.querySelectorAll('.answer-btn');
 
-    const tabs = [tabByEdition, tabByField, tabShuffle];
+    const tabWeak = document.getElementById('tab-weak'); 
+    const tabs = [tabByEdition, tabByField, tabShuffle, tabWeak];
     const panels = [panelByEdition, panelByField, panelShuffle];
     const panelWeakEl = document.getElementById('panel-weak');
 
