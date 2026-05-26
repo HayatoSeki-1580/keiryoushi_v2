@@ -6,7 +6,7 @@ import * as pdfjsLib
     from './lib/pdfjs/build/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
 
-// --- グローバル変数 ---xplanationEdition, btnExplanat
+// --- グローバル変数 ---
 let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     pageNumSpan, pageCountSpan, prevBtn, nextBtn, jumpToSelect,
     tabByEdition, tabByField, tabShuffle,
@@ -26,6 +26,9 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
 let btnExplanationEdition, btnExplanationField, btnExplanationShuffle, explanationModal, explanationBody, explanationTitle, closeModalSpan;
 let btnExplanationWeak, resultAreaWeak, scoreCorrectWeak, weakAnswerArea;
 let currentExplanations = {}; 
+
+// ★ アクティブなタブを管理する変数（'edition' | 'field' | 'shuffle' | 'weak'）
+let activeMode = 'edition';
 
 let pdfDoc = null;
 let currentPageNum = 1;
@@ -80,7 +83,22 @@ function getCurrentQuestionId() {
     return 'unknown';
 }
 
-/** 索引ファイル(editions.json)読込 */
+// ★ アクティブなパネル・UI要素を返す共通関数
+function getActivePanelContext() {
+    const panelWeakEl = document.getElementById('panel-weak');
+    switch (activeMode) {
+        case 'weak':
+            return { panel: panelWeakEl, resultArea: resultAreaWeak, explanationBtn: btnExplanationWeak };
+        case 'field':
+            return { panel: panelByField, resultArea: resultAreaField, explanationBtn: btnExplanationField };
+        case 'shuffle':
+            return { panel: panelShuffle, resultArea: resultAreaShuffle, explanationBtn: btnExplanationShuffle };
+        default: // 'edition'
+            return { panel: panelByEdition, resultArea: resultAreaEdition, explanationBtn: btnExplanationEdition };
+    }
+}
+
+/** 索引ファイル(editionsjson)読込 */
 async function setupEditionSelector() {
     if (!editionSelect) return;
     try {
@@ -88,7 +106,7 @@ async function setupEditionSelector() {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTPエラー`);
         const data = await response.json();
-        const editions = data.available.sort((a, b) => b.value - a.value);
+        const editions = data.availablesort((a, b) => b.value - a.value);
         editionSelect.innerHTML = '';
         editions.forEach(info => {
             const option = document.createElement('option');
@@ -133,8 +151,6 @@ async function loadDifficultyData() {
   difficultyData = await res.json();
 }
 
-
-
 /** 解答JSON読込 */
 async function loadAnswersForEdition(edition) {
     const url = `./pdf/${edition}/${edition}_answer.json`;
@@ -172,7 +188,6 @@ function isDifficultyAllowed(questionId) {
     const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
     const difficulty = difficultyMap[questionId];
     
-    // 難易度未定義の場合、'none' が許可されていればOK
     if (!difficulty) {
         return allowed.has('none') || isAllChecked;
     }
@@ -207,11 +222,9 @@ function updateTimerDisplay() {
     
     let totalSeconds = 0;
     if (isTimerRunning) {
-        // 動いている場合: 過去の蓄積 + 今回の経過時間
         const currentSession = Date.now() - examStartTime;
         totalSeconds = Math.floor((examAccumulatedTime + currentSession) / 1000);
     } else {
-        // 止まっている場合: 蓄積時間のみ
         totalSeconds = Math.floor(examAccumulatedTime / 1000);
     }
 
@@ -240,7 +253,6 @@ function stopTimer() {
         examTimerInterval = null;
     }
     
-    // 時間を確定して蓄積
     examAccumulatedTime += Date.now() - examStartTime;
     isTimerRunning = false;
     updateTimerDisplay(); 
@@ -292,7 +304,7 @@ async function renderPdf(edition, subject, pageNum = 1) {
 /** ジャンプ用プルダウン生成 */
 function populateJumpSelector(questions) {
     if (!jumpToSelect) return;
-        jumpToSelect.innerHTML = '<option value="">移動...</option>';
+    jumpToSelect.innerHTML = '';
     if (Array.isArray(questions)) {
         questions.forEach((q, index) => {
             const option = document.createElement('option');
@@ -338,12 +350,10 @@ function updateDifficultyDisplay(questionId) {
     }
 }
 
-/** ナビボタン更新 (不足していた関数) */
+/** ナビボタン更新 */
 function updateNavButtons() {
     if (!prevBtn || !nextBtn || !jumpToSelect) return;
     prevBtn.disabled = (currentFieldIndex <= 0);
-    // 試験モードかつ最終問題の場合は「次へ」ボタンを隠す等の制御はrenderPageInternalで行うが
-    // ここでは基本的な有効/無効を切り替える
     nextBtn.disabled = (currentFieldIndex >= currentFieldQuestions.length - 1);
     jumpToSelect.disabled = false;
 }
@@ -352,12 +362,9 @@ function updateNavButtons() {
 async function renderPageInternal(pdfPageNum) {
     if (!pdfDoc || !canvas) return;
     try {
-const panelWeakEl = document.getElementById('panel-weak');
-let activePanel = panelByEdition;
-if (panelWeakEl && !panelWeakEl.classList.contains('hidden')) activePanel = panelWeakEl;
-else if (!panelByField.classList.contains('hidden')) activePanel = panelByField;
-else if (!panelShuffle.classList.contains('hidden')) activePanel = panelShuffle;
-        
+        // ★ activeMode を使って一元的にアクティブパネルを取得
+        const { panel: activePanel, resultArea: activeResultArea, explanationBtn: activeExplanationBtn } = getActivePanelContext();
+
         const activeAnswerButtons = activePanel ? activePanel.querySelectorAll('.answer-btn') : [];
         activeAnswerButtons.forEach(btn => { 
             btn.className = 'answer-btn'; 
@@ -407,7 +414,6 @@ else if (!panelShuffle.classList.contains('hidden')) activePanel = panelShuffle;
                  }
              }
             
-            // 【追加】科目名も表示する
             const subjName = subjectMap[subject] || subject; 
             if(questionSource) {
                 questionSource.textContent = `[${subjName}] ${editionDisplayText} 問${question.pageNum}`;
@@ -416,29 +422,16 @@ else if (!panelShuffle.classList.contains('hidden')) activePanel = panelShuffle;
             
             const currentQuestionId = getQuestionId(question.edition, subject, question.pageNum);
             
-   　       if(resultAreaEdition) resultAreaEdition.textContent = '';
+            if(resultAreaEdition) resultAreaEdition.textContent = '';
             if(resultAreaField) resultAreaField.textContent = '';
             if(resultAreaShuffle) resultAreaShuffle.textContent = '';
             if(resultAreaWeak) resultAreaWeak.textContent = '';
 
-            
             updateNavButtons();
             updateDifficultyDisplay(currentQuestionId);
 
-            // 履歴確認
-            const history = answerHistory[currentQuestionId];
-            const panelWeakRef = document.getElementById('panel-weak');
-            let activeResultArea = resultAreaEdition;
-            if (activePanel === panelByField) activeResultArea = resultAreaField;
-            if (activePanel === panelShuffle) activeResultArea = resultAreaShuffle;
-            if (panelWeakRef && activePanel === panelWeakRef) activeResultArea = resultAreaWeak;
-
-            let activeExplanationBtn = btnExplanationEdition;
-            if (activePanel === panelByField) activeExplanationBtn = btnExplanationField;
-            if (activePanel === panelShuffle) activeExplanationBtn = btnExplanationShuffle;
-            if (panelWeakRef && activePanel === panelWeakRef) activeExplanationBtn = btnExplanationWeak;
-
             // 未解答かつ試験モードならタイマーをスタート（再開）
+            const history = answerHistory[currentQuestionId];
             if (isExamMode && !history) {
                 startTimer();
             }
@@ -499,10 +492,8 @@ function populateFieldSelector() {
         const barWidthPercent = Math.max(Math.round(ratio * 100), 5);
 
         optionDiv.innerHTML = `
-            <span>${field.fieldName} (${questionCount}問)</span>
-            <span class="freq-bar-container">
-                <span class="freq-bar ${colorClass}" style="width: ${barWidthPercent}%;"></span>
-            </span>
+            ${field.fieldName} (${questionCount}問)
+              
         `;
         optionDiv.dataset.value = index;
         optionDiv.dataset.text = `${field.fieldName} (${questionCount}問)`;
@@ -526,7 +517,6 @@ async function displayFieldQuestion(index) {
     const question = currentFieldQuestions[index];
     
     await loadAnswersForEdition(question.edition);
-    // 全モードで解説をロード
     await loadExplanations(question.edition);
 
     const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
@@ -538,37 +528,15 @@ function updateScoreDisplay() {
     if(scoreCorrectEdition) scoreCorrectEdition.textContent = correctCount;
     if(scoreCorrectField) scoreCorrectField.textContent = correctCount;
     if(scoreCorrectShuffle) scoreCorrectShuffle.textContent = correctCount;
-    if(scoreCorrectWeak) scoreCorrectWeak.textContent = correctCount; // ← 追加
+    if(scoreCorrectWeak) scoreCorrectWeak.textContent = correctCount;
 }
 
 /** 正誤判定 */
 function checkAnswer(selectedChoice) {
     const questionId = getCurrentQuestionId();
-    
-    const panelWeak = document.getElementById('panel-weak');
-    const isWeakActive = panelWeak && !panelWeak.classList.contains('hidden');
 
-    let activePanel;
-    let resultArea;
-    let explanationBtn;
-
-        if (isWeakActive) {
-        activePanel = document.getElementById('panel-weak');
-        resultArea = resultAreaWeak;
-        explanationBtn = btnExplanationWeak;
-    } else if (!panelByField.classList.contains('hidden')) {
-        activePanel = panelByField;
-        resultArea = resultAreaField;
-        explanationBtn = btnExplanationField;
-    } else if (!panelShuffle.classList.contains('hidden')) {
-        activePanel = panelShuffle;
-        resultArea = resultAreaShuffle;
-        explanationBtn = btnExplanationShuffle;
-    } else {
-        activePanel = panelByEdition;
-        resultArea = resultAreaEdition;
-        explanationBtn = btnExplanationEdition;
-    }
+    // ★ activeMode を使って一元的にアクティブパネルを取得
+    const { panel: activePanel, resultArea, explanationBtn } = getActivePanelContext();
 
     if (!resultArea || !activePanel) return;
     const activeAnswerButtons = activePanel.querySelectorAll('.answer-btn');
@@ -579,7 +547,7 @@ function checkAnswer(selectedChoice) {
     let subjectKey;
     let questionPageNum;
 
- if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
+    if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
         const q = currentFieldQuestions[currentFieldIndex];
         subjectKey = q.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         questionPageNum = q.pageNum;
@@ -624,9 +592,6 @@ function checkAnswer(selectedChoice) {
     }
 }
 
-
-
-
 /** 試験終了処理 */
 function finishExam() {
     stopTimer();
@@ -656,7 +621,10 @@ function showResults() {
     
     resultsList.innerHTML = '';
     const table = document.createElement('table');
-    table.innerHTML = `<thead><tr><th>問題</th><th>結果</th><th>あなたの解答</th><th>正解</th><th>復習</th></tr></thead><tbody></tbody>`;
+    table.innerHTML = `
+        <thead><tr><th>問題</th><th>結果</th><th>あなたの解答</th><th>正解</th><th>復習</th></tr></thead>
+        <tbody></tbody>
+    `;
     const tbody = table.querySelector('tbody');
     
     const certDetails = [];
@@ -769,13 +737,12 @@ function showResults() {
     });
 }
 
-/** 解説を表示する関数 (不足していた関数) */
+/** 解説を表示する関数 */
 function showExplanationModal() {
     let subjectKey = "";
     let pageNum = "";
     let edition = "";
 
-    // モード判定
     const context = currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]
         ? { q: currentFieldQuestions[currentFieldIndex], mode: 'field' }
         : { q: null, mode: 'edition' };
@@ -794,7 +761,6 @@ function showExplanationModal() {
     const explanationData = currentExplanations?.[subjectKey]?.[pageNum];
     let displayText = explanationData ? explanationData.body : "この問題の解説はまだ登録されていません。";
 
-    // 数式保護
     const mathBlocks = [];
     displayText = displayText.replace(/(\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g, (match) => {
         mathBlocks.push(match);
@@ -807,7 +773,6 @@ function showExplanationModal() {
         explanationBody.textContent = displayText;
     }
 
-    // 数式復元
     explanationBody.innerHTML = explanationBody.innerHTML.replace(/MATHBLOCK(\d+)END/g, (match, index) => {
         return mathBlocks[index];
     });
@@ -826,7 +791,7 @@ function showExplanationModal() {
     explanationModal.style.display = 'block';
 }
 
-/** カスタムセレクトを閉じる (不足していた関数) */
+/** カスタムセレクトを閉じる */
 function closeCustomSelect() {
     if(selectItems) selectItems.classList.add('select-hide');
     if(selectSelected) selectSelected.classList.remove('select-arrow-active');
@@ -838,31 +803,34 @@ function setupEventListeners() {
 
     const tabs = [tabByEdition, tabByField, tabShuffle];
     const panels = [panelByEdition, panelByField, panelShuffle];
+    const panelWeakEl = document.getElementById('panel-weak');
 
-   const panelWeakEl = document.getElementById('panel-weak');
+    if (tabByEdition) tabByEdition.addEventListener('click', () => {
+        activeMode = 'edition'; // ★
+        tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
+        panels.forEach(p => p.classList.add('hidden'));
+        if (panelWeakEl) panelWeakEl.classList.add('hidden');
+        panelByEdition.classList.remove('hidden');
+        if(questionSource) questionSource.style.display = 'none';
+        isExamMode = false;
+    });
+    if (tabByField) tabByField.addEventListener('click', () => {
+        activeMode = 'field'; // ★
+        tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
+        panels.forEach(p => p.classList.add('hidden'));
+        if (panelWeakEl) panelWeakEl.classList.add('hidden');
+        panelByField.classList.remove('hidden');
+        isExamMode = false;
+    });
+    if (tabShuffle) tabShuffle.addEventListener('click', () => {
+        activeMode = 'shuffle'; // ★
+        tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
+        panels.forEach(p => p.classList.add('hidden'));
+        if (panelWeakEl) panelWeakEl.classList.add('hidden');
+        panelShuffle.classList.remove('hidden');
+        isExamMode = false; 
+    });
 
-if (tabByEdition) tabByEdition.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
-    panels.forEach(p => p.classList.add('hidden'));
-    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
-    panelByEdition.classList.remove('hidden');
-    if(questionSource) questionSource.style.display = 'none';
-    isExamMode = false;
-});
-if (tabByField) tabByField.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
-    panels.forEach(p => p.classList.add('hidden'));
-    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
-    panelByField.classList.remove('hidden');
-    isExamMode = false;
-});
-if (tabShuffle) tabShuffle.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
-    panels.forEach(p => p.classList.add('hidden'));
-    if (panelWeakEl) panelWeakEl.classList.add('hidden');  // ← 追加
-    panelShuffle.classList.remove('hidden');
-    isExamMode = false; 
-});
     // 年度別「表示」
     if (goBtnEdition) goBtnEdition.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
@@ -876,7 +844,7 @@ if (tabShuffle) tabShuffle.addEventListener('click', () => {
         let tempQuestions = [];
         try {
             const tempLoadingTask = pdfjsLib.getDocument(url);
-            const tempPdfDoc = await tempLoadingTask.promise;
+            const tempPdfDoc = await tempLoadingTaskpromise;
             const total = tempPdfDoc.numPages > 1 ? tempPdfDoc.numPages - 1 : 0;
             for (let i = 1; i <= total; i++) {
                 tempQuestions.push({ edition: selectedEdition, subject: selectedSubject, pageNum: i });
@@ -914,7 +882,7 @@ if (tabShuffle) tabShuffle.addEventListener('click', () => {
         }
         
         let tempQuestions = fieldsData[subject][fieldIndex].questions;
-        tempQuestions = tempQuestions.map(q => ({...q, subject: subject}));
+        tempQuestions = tempQuestions.map(q => ({q, subject: subject}));
         
         currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, subject);
         currentSessionQuestions = currentFieldQuestions;
@@ -1006,7 +974,6 @@ if (tabShuffle) tabShuffle.addEventListener('click', () => {
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
         populateJumpSelector(currentFieldQuestions);
         
-        // 試験モード開始
         isExamMode = true;
         resetTimer();
         
@@ -1119,17 +1086,14 @@ async function initialize() {
     nextBtn = document.getElementById('next-btn');
     jumpToSelect = document.getElementById('jump-to-select');
     
-    // タブ
     tabByEdition = document.getElementById('tab-by-edition');
     tabByField = document.getElementById('tab-by-field');
     tabShuffle = document.getElementById('tab-shuffle'); 
 
-    // パネル
     panelByEdition = document.getElementById('panel-by-edition');
     panelByField = document.getElementById('panel-by-field');
     panelShuffle = document.getElementById('panel-shuffle'); 
 
-    // 年度別
     editionSelect = document.getElementById('edition-select');
     subjectSelectEdition = document.getElementById('subject-select-edition');
     goBtnEdition = document.getElementById('go-btn-edition');
@@ -1137,7 +1101,6 @@ async function initialize() {
     scoreCorrectEdition = panelByEdition ? panelByEdition.querySelector('.score-correct') : null;
     showResultsBtnEdition = document.getElementById('show-results-btn-edition');
     
-    // 分野別
     subjectSelectField = document.getElementById('subject-select-field');
     customSelect = document.getElementById('field-select-custom');
     selectSelected = customSelect ? customSelect.querySelector('.select-selected') : null;
@@ -1147,14 +1110,12 @@ async function initialize() {
     scoreCorrectField = panelByField ? panelByField.querySelector('.score-correct') : null;
     showResultsBtnField = document.getElementById('show-results-btn-field');
     
-    // シャッフル演習
     goBtnShuffle = document.getElementById('go-btn-shuffle');
     resultAreaShuffle = document.getElementById('result-area-shuffle');
     scoreCorrectShuffle = panelShuffle ? panelShuffle.querySelector('.score-correct') : null;
     showResultsBtnShuffle = document.getElementById('show-results-btn-shuffle');
     finishExamBtn = document.getElementById('finish-exam-btn'); 
     
-    // トグル・フィルター・チェックボックス
     difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
     filterCheckboxes = document.querySelectorAll('.diff-filter-cb');
     shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb'); 
@@ -1167,7 +1128,6 @@ async function initialize() {
     resultsList = document.getElementById('results-list');
     backToExerciseBtn = document.getElementById('back-to-exercise-btn');
 
-    // 証明書要素
     certificateContainer = document.getElementById('certificate-container');
     certImageContainer = document.getElementById('cert-image-container'); 
     certScoreNum = document.getElementById('cert-score-num');
@@ -1177,16 +1137,14 @@ async function initialize() {
     certDetailsTableBody = document.querySelector('#cert-details-table tbody');
     certDate = document.getElementById('cert-date');
 
-    // 解説機能
     btnExplanationEdition = document.getElementById('btn-explanation-edition');
     btnExplanationField = document.getElementById('btn-explanation-field');
-        btnExplanationShuffle = document.getElementById('btn-explanation-shuffle');
-    btnExplanationWeak = document.getElementById('btn-explanation-weak');       // ← 追加
-    resultAreaWeak = document.getElementById('result-area-weak');               // ← 追加
+    btnExplanationShuffle = document.getElementById('btn-explanation-shuffle');
+    btnExplanationWeak = document.getElementById('btn-explanation-weak');
+    resultAreaWeak = document.getElementById('result-area-weak');
     scoreCorrectWeak = document.getElementById('score-correct-weak');
-    weakAnswerArea = document.getElementById('weak-answer-area');               // ← 追加
+    weakAnswerArea = document.getElementById('weak-answer-area');
     explanationModal = document.getElementById('explanation-modal');
-
     explanationBody = document.getElementById('explanation-body');
     explanationTitle = document.getElementById('explanation-title');
     closeModalSpan = document.querySelector('.close-modal');
@@ -1232,7 +1190,6 @@ function setupLoginUI() {
     loginBtn.disabled = true;
     try {
       const hash = await sha256(password);
-      // Supabaseでユーザー照合
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&password_hash=eq.${hash}&select=user_id`,
         { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
@@ -1258,19 +1215,16 @@ function setupLoginUI() {
     loginBtn.disabled = false;
   });
 
-  // セッション復元
   const savedUser = sessionStorage.getItem('currentUser');
-if (savedUser) {
-  currentUser = { userId: savedUser };
-  if (loginOverlay) loginOverlay.style.display = 'none';
-  if (welcomeOverlay) welcomeOverlay.style.display = 'none';
-  updateWeakTabVisibility();
-  loadUnderstandingData();
-  showCurrentUser(savedUser); // ← これを追加
+  if (savedUser) {
+    currentUser = { userId: savedUser };
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'none';
+    updateWeakTabVisibility();
+    loadUnderstandingData();
+    showCurrentUser(savedUser);
+  }
 }
-
-}
-
 
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
@@ -1298,7 +1252,6 @@ async function loadUnderstandingData() {
   }
 }
 
-
 // ============================================================
 // 理解度パネル表示・送信
 // ============================================================
@@ -1319,14 +1272,12 @@ function showUnderstandingPanel(questionId, isCorrect) {
         currentFieldIndex++;
         displayFieldQuestion(currentFieldIndex);
       } else if (isExamMode) {
-        // 試験モードで最終問題の場合は試験終了
         finishExam();
       }
-      // 最終問題かつ通常モードの場合は何もしない（現在の問題に留まる）
+      // 最終問題かつ通常モードの場合は何もしない
     };
   });
 }
-
 
 async function saveUnderstanding(questionId, level, isCorrect) {
   if (!currentUser) return;
@@ -1353,7 +1304,6 @@ async function saveUnderstanding(questionId, level, isCorrect) {
   }
 }
 
-
 // ============================================================
 // 苦手問題演習
 // ============================================================
@@ -1364,16 +1314,15 @@ function setupWeakUI() {
   const showResultsBtnWeak = document.getElementById('show-results-btn-weak');
   const weakSubjectFilter = document.getElementById('weak-subject-filter');
 
- if (tabWeak) tabWeak.addEventListener('click', () => {
-    // 全タブのactiveを外す
+  if (tabWeak) tabWeak.addEventListener('click', () => {
+    activeMode = 'weak'; // ★
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     tabWeak.classList.add('active');
-    // 全パネルを隠す
     [panelByEdition, panelByField, panelShuffle].forEach(p => { if(p) p.classList.add('hidden'); });
     if (panelWeak) panelWeak.classList.remove('hidden');
     isExamMode = false;
     updateWeakCount();
-});
+  });
 
   if (weakSubjectFilter) weakSubjectFilter.addEventListener('change', updateWeakCount);
   document.querySelectorAll('input[name="weak-level"]').forEach(r => {
@@ -1441,6 +1390,7 @@ function updateWeakTabVisibility() {
   tabWeak.style.opacity = currentUser ? '1' : '0.5';
   tabWeak.title = currentUser ? '' : 'ログインが必要です';
 }
+
 function showCurrentUser(userId) {
   let userDisplay = document.getElementById('user-display');
   if (!userDisplay) {
@@ -1456,27 +1406,22 @@ function showCurrentUser(userId) {
 // 難易度CSVアップロード機能
 // ============================================================
 
-// 科目名マッピング（CSV表記 → DBキー）
 const subjectNameToKey = {
   '法規': 'houki', '管理': 'kanri', '一基': 'ichiki', '計質': 'keishitsu',
   '環化': 'kanka', '環物': 'kanbutsu', '環濃': 'kannou', '環音': 'kanon'
 };
 
-// 回次文字列 → 数値（例: "76回(R7)" → 76）
 function parseEdition(str) {
   const m = str.match(/^(\d+)回/);
   return m ? parseInt(m[1]) : null;
 }
 
-// 難易度文字列 → A/B/C（例: "A(易)" → "A"）
 function parseDifficulty(str) {
   const m = str.match(/^([ABC])/);
   return m ? m[1] : null;
 }
 
 function setupCsvUploadUI() {
-  // 既存のfooterやナビの邪魔にならないよう、隠しアクセス方式に変更
-  // タイトルを5回タップ/クリックで表示
   let tapCount = 0;
   let tapTimer = null;
 
@@ -1499,18 +1444,11 @@ function setupCsvUploadUI() {
   container.style.cssText = 'position:fixed; bottom:80px; right:16px; z-index:9999;';
 
   container.innerHTML = `
-    <div id="csv-upload-panel" style="
-      display:none; background:#fff; border:1px solid #ccc;
-      border-radius:10px; padding:16px; width:280px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.15); font-size:13px;">
-      <div style="font-weight:bold; margin-bottom:8px;">📊 難易度データ更新</div>
-      <input type="file" id="csv-file-input" accept=".csv" style="width:100%; margin-bottom:8px;">
-      <button id="csv-upload-btn" style="
-        width:100%; background:#4a90d9; color:#fff; border:none;
-        border-radius:6px; padding:8px; cursor:pointer; font-size:13px;">
-        アップロード
-      </button>
-      <div id="csv-upload-status" style="margin-top:8px; font-size:12px; color:#555;"></div>
+    <div id="csv-upload-panel" style="display:none; background:#fff; border:1px solid #ccc; border-radius:8px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.15); min-width:260px;">
+      <h4 style="margin:0 0 8px">📊 難易度データ更新</h4>
+      <input type="file" id="csv-file-input" accept=".csv" style="margin-bottom:8px; display:block;">
+      <button id="csv-upload-btn" style="padding:6px 16px; background:#4a90e2; color:#fff; border:none; border-radius:4px; cursor:pointer;">アップロード</button>
+      <div id="csv-upload-status" style="margin-top:8px; font-size:13px;"></div>
     </div>
   `;
   document.body.appendChild(container);
@@ -1584,7 +1522,5 @@ function setupCsvUploadUI() {
     }
   });
 }
-
-
 
 document.addEventListener('DOMContentLoaded', initialize);
