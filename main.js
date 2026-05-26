@@ -798,16 +798,22 @@ function setupEventListeners() {
     const panels = [panelByEdition, panelByField, panelShuffle];
     const panelWeakEl = document.getElementById('panel-weak');
 
-    if (tabByEdition) tabByEdition.addEventListener('click', () => {
-        activeMode = 'edition';
-        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
-        tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
-        panels.forEach(p => p.classList.add('hidden'));
-        if (panelWeakEl) panelWeakEl.classList.add('hidden');
-        panelByEdition.classList.remove('hidden');
-        if(questionSource) questionSource.style.display = 'none';
-        isExamMode = false;
-    });
+if (tabByEdition) tabByEdition.addEventListener('click', () => {
+    activeMode = 'edition';
+    resetAllAnswerButtons();
+    // ★ 追加
+    currentFieldQuestions = [];
+    currentFieldIndex = 0;
+    answerHistory = {};
+    if (weakAnswerArea) weakAnswerArea.style.display = 'none';
+    tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
+    panels.forEach(p => p.classList.add('hidden'));
+    if (panelWeakEl) panelWeakEl.classList.add('hidden');
+    panelByEdition.classList.remove('hidden');
+    if(questionSource) questionSource.style.display = 'none';
+    isExamMode = false;
+});
+
     if (tabByField) tabByField.addEventListener('click', () => {
         activeMode = 'field';
         resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
@@ -1310,16 +1316,22 @@ function setupWeakUI() {
   const showResultsBtnWeak = document.getElementById('show-results-btn-weak');
   const weakSubjectFilter = document.getElementById('weak-subject-filter');
 
-  if (tabWeak) tabWeak.addEventListener('click', () => {
+if (tabWeak) tabWeak.addEventListener('click', () => {
     activeMode = 'weak';
-    resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
+    resetAllAnswerButtons();
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     tabWeak.classList.add('active');
     [panelByEdition, panelByField, panelShuffle].forEach(p => { if(p) p.classList.add('hidden'); });
     if (panelWeak) panelWeak.classList.remove('hidden');
     isExamMode = false;
+    // ★ 追加：演習状態をリセット
+    currentFieldQuestions = [];
+    currentFieldIndex = 0;
+    answerHistory = {};
+    if (weakAnswerArea) weakAnswerArea.style.display = 'none'; // ← 追加
     updateWeakCount();
-  });
+});
+
 
   if (weakSubjectFilter) weakSubjectFilter.addEventListener('change', updateWeakCount);
   document.querySelectorAll('input[name="weak-level"]').forEach(r => {
