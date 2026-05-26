@@ -1,12 +1,9 @@
 const SUPABASE_URL = 'https://yxjoqcnzqvrtwfkldqpa.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4am9xY256cXZydHdma2xkcXBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDI2NTYsImV4cCI6MjA5NDk3ODY1Nn0.Dg7AfiUIN9XpAwRnQgnWwPIKjqo__r2fbh40YZDI3is';
 
-// --- モジュールのインポート ---
-import * as pdfjsLib 
-    from './lib/pdfjs/build/pdf.mjs';
+import * as pdfjsLib from './lib/pdfjs/build/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = './lib/pdfjs/build/pdf.worker.mjs';
 
-// --- グローバル変数 ---
 let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     pageNumSpan, pageCountSpan, prevBtn, nextBtn, jumpToSelect,
     tabByEdition, tabByField, tabShuffle,
@@ -22,12 +19,10 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
     certificateContainer, certImageContainer, certScoreNum, certTimeValue, certDetailsTableBody, certDate, certSubjects, certDifficulties;
 
-// 解説機能用の変数
 let btnExplanationEdition, btnExplanationField, btnExplanationShuffle, explanationModal, explanationBody, explanationTitle, closeModalSpan;
 let btnExplanationWeak, resultAreaWeak, scoreCorrectWeak, weakAnswerArea;
-let currentExplanations = {}; 
+let currentExplanations = {};
 
-// ★ アクティブなタブを管理する変数（'edition' | 'field' | 'shuffle' | 'weak'）
 let activeMode = 'edition';
 
 let pdfDoc = null;
@@ -35,8 +30,8 @@ let currentPageNum = 1;
 let currentAnswers = {};
 let currentUser = null;
 let fieldsData = {};
-let difficultyData = []; 
-let difficultyMap = {};  
+let difficultyData = [];
+let difficultyMap = {};
 let currentFieldQuestions = [];
 let currentFieldIndex = 0;
 let correctCount = 0;
@@ -45,45 +40,38 @@ let currentSessionQuestions = [];
 let understandingMap = {};
 let pendingUnderstandingQuestionId = null;
 
-// タイマー・試験モード関連変数
 let isExamMode = false;
 let examStartTime = 0;
-let examAccumulatedTime = 0; 
+let examAccumulatedTime = 0;
 let examTimerInterval = null;
 let isTimerRunning = false;
 
-// 試験設定保存用
 let examSelectedSubjectsText = "";
 let examSelectedDiffText = "";
 
-// 日本語マッピング
 const subjectMap = {
     kanka: "環化", kanbutsu: "環物", kannou: "環濃", kanon: "環音",
     houki: "法規", kanri: "管理", ichiki: "一基", keishitsu: "計質"
 };
 
-/** ローディング表示を制御 */
 function showLoading(show) {
     if(loadingSpinner) loadingSpinner.classList.toggle('hidden', !show);
 }
 
-/** 問題ID生成 */
 function getQuestionId(edition, subject, pageNum) {
     const e = edition || 'unknown'; const s = subject || 'unknown'; const p = pageNum || 'unknown';
     return `${e}-${s}-${p}`;
 }
 
-/** 現在の問題ID取得 */
 function getCurrentQuestionId() {
     if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
         const question = currentFieldQuestions[currentFieldIndex];
         const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
         return getQuestionId(question.edition, subject, question.pageNum);
-    } 
+    }
     return 'unknown';
 }
 
-// ★ アクティブなパネル・UI要素を返す共通関数
 function getActivePanelContext() {
     const panelWeakEl = document.getElementById('panel-weak');
     switch (activeMode) {
@@ -93,12 +81,11 @@ function getActivePanelContext() {
             return { panel: panelByField, resultArea: resultAreaField, explanationBtn: btnExplanationField };
         case 'shuffle':
             return { panel: panelShuffle, resultArea: resultAreaShuffle, explanationBtn: btnExplanationShuffle };
-        default: // 'edition'
+        default:
             return { panel: panelByEdition, resultArea: resultAreaEdition, explanationBtn: btnExplanationEdition };
     }
 }
 
-// ★ タブ切り替え時に全パネルのボタン・結果表示をリセットする共通関数
 function resetAllAnswerButtons() {
     document.querySelectorAll('.answer-btn').forEach(btn => {
         btn.className = 'answer-btn';
@@ -114,12 +101,27 @@ function resetAllAnswerButtons() {
     if(btnExplanationWeak)    btnExplanationWeak.classList.add('hidden');
 }
 
-/** 索引ファイル(editionsjson)読込 */
+// ★ タブ切り替え時に演習状態を完全リセットする共通関数
+function resetExerciseState() {
+    currentFieldQuestions = [];
+    currentFieldIndex = 0;
+    answerHistory = {};
+    correctCount = 0;
+    updateScoreDisplay();
+    if (weakAnswerArea) weakAnswerArea.style.display = 'none';
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    if (questionSource) questionSource.style.display = 'none';
+    if (pageNumSpan) pageNumSpan.textContent = '?';
+    if (pageCountSpan) pageCountSpan.textContent = '?';
+}
+
 async function setupEditionSelector() {
     if (!editionSelect) return;
     try {
-        const url = './data/editions.json';
-        const response = await fetch(url);
+        const response = await fetch('./data/editions.json');
         if (!response.ok) throw new Error(`HTTPエラー`);
         const data = await response.json();
         const editions = data.availablesort((a, b) => b.value - a.value);
@@ -132,7 +134,6 @@ async function setupEditionSelector() {
     } catch (error) { console.error("❌ editions.json読込エラー:", error); }
 }
 
-/** 分野別ファイル(fields.json)読込 */
 async function loadFieldsData() {
     if (!customSelect) return;
     try {
@@ -143,7 +144,6 @@ async function loadFieldsData() {
     } catch (error) { console.error("❌ fields.json読込エラー:", error); }
 }
 
-/** 難易度データ読込 */
 async function loadDifficultyData() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?select=*`, {
@@ -157,7 +157,6 @@ async function loadDifficultyData() {
         const id = `${r.edition}-${r.subject}-${r.question_num}`;
         difficultyMap[id] = r.difficulty;
       });
-      console.log('難易度データをSupabaseから取得しました');
       return;
     }
   } catch (e) {
@@ -167,7 +166,6 @@ async function loadDifficultyData() {
   difficultyData = await res.json();
 }
 
-/** 解答JSON読込 */
 async function loadAnswersForEdition(edition) {
     const url = `./pdf/${edition}/${edition}_answer.json`;
     try {
@@ -180,10 +178,9 @@ async function loadAnswersForEdition(edition) {
     }
 }
 
-/** 解説JSON読込 */
 async function loadExplanations(edition) {
     const url = `./data/explanations/${edition}.json`;
-    currentExplanations = {}; 
+    currentExplanations = {};
     try {
         const response = await fetch(url);
         if (response.ok) {
@@ -194,7 +191,6 @@ async function loadExplanations(edition) {
     }
 }
 
-/** 難易度フィルター判定 */
 function isDifficultyAllowed(questionId) {
     const allowed = new Set();
     filterCheckboxes.forEach(cb => {
@@ -208,7 +204,6 @@ function isDifficultyAllowed(questionId) {
     return allowed.has(difficulty);
 }
 
-/** リストの難易度フィルタリング */
 function filterQuestionsByDifficulty(questions, defaultSubject = '') {
     return questions.filter(q => {
         const subject = q.subject || defaultSubject;
@@ -217,7 +212,6 @@ function filterQuestionsByDifficulty(questions, defaultSubject = '') {
     });
 }
 
-/** 配列をシャッフルする */
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -225,10 +219,6 @@ function shuffleArray(array) {
     }
     return array;
 }
-
-// ==========================================
-//  タイマー機能
-// ==========================================
 
 function updateTimerDisplay() {
     if (!examTimerSpan) return;
@@ -245,11 +235,11 @@ function updateTimerDisplay() {
 }
 
 function startTimer() {
-    if (isTimerRunning) return; 
+    if (isTimerRunning) return;
     examStartTime = Date.now();
     isTimerRunning = true;
     if(examTimerSpan) examTimerSpan.classList.remove('hidden');
-    updateTimerDisplay(); 
+    updateTimerDisplay();
     examTimerInterval = setInterval(updateTimerDisplay, 1000);
 }
 
@@ -261,7 +251,7 @@ function stopTimer() {
     }
     examAccumulatedTime += Date.now() - examStartTime;
     isTimerRunning = false;
-    updateTimerDisplay(); 
+    updateTimerDisplay();
 }
 
 function resetTimer() {
@@ -282,9 +272,6 @@ function getFinalTimeStr() {
     return `${minutes}:${seconds}`;
 }
 
-// ==========================================
-
-/** PDF描画 */
 async function renderPdf(edition, subject, pageNum = 1) {
     if (!canvas) return;
     currentPageNum = pageNum;
@@ -305,15 +292,14 @@ async function renderPdf(edition, subject, pageNum = 1) {
     }
 }
 
-/** ジャンプ用プルダウン生成 */
 function populateJumpSelector(questions) {
     if (!jumpToSelect) return;
     jumpToSelect.innerHTML = '';
     if (Array.isArray(questions)) {
         questions.forEach((q, index) => {
             const option = document.createElement('option');
-            option.value = index; 
-            option.textContent = `問${q.pageNum}`; 
+            option.value = index;
+            option.textContent = `問${q.pageNum}`;
             jumpToSelect.appendChild(option);
         });
     } else {
@@ -327,7 +313,6 @@ function populateJumpSelector(questions) {
     }
 }
 
-/** 難易度表示の更新 */
 function updateDifficultyDisplay(questionId) {
     const isVisible = difficultyToggles.length > 0 && difficultyToggles[0].checked;
     if (!difficultyBadge) return;
@@ -340,14 +325,13 @@ function updateDifficultyDisplay(questionId) {
         else if (difficulty === 'C') { displayText = "C(難)"; colorClass = 'diff-hard'; }
         difficultyBadge.textContent = `難易度: ${displayText}`;
         difficultyBadge.classList.remove('hidden');
-        difficultyBadge.className = 'difficulty-badge'; 
+        difficultyBadge.className = 'difficulty-badge';
         difficultyBadge.classList.add(colorClass);
     } else {
         difficultyBadge.classList.add('hidden');
     }
 }
 
-/** ナビボタン更新 */
 function updateNavButtons() {
     if (!prevBtn || !nextBtn || !jumpToSelect) return;
     prevBtn.disabled = (currentFieldIndex <= 0);
@@ -355,25 +339,22 @@ function updateNavButtons() {
     jumpToSelect.disabled = false;
 }
 
-/** ページ描画(内部) */
 async function renderPageInternal(pdfPageNum) {
     if (!pdfDoc || !canvas) return;
     try {
-        // ★ activeMode を使って一元的にアクティブパネルを取得
         const { panel: activePanel, resultArea: activeResultArea, explanationBtn: activeExplanationBtn } = getActivePanelContext();
 
         const activeAnswerButtons = activePanel ? activePanel.querySelectorAll('.answer-btn') : [];
-        activeAnswerButtons.forEach(btn => { 
-            btn.className = 'answer-btn'; 
-            btn.disabled = false; 
+        activeAnswerButtons.forEach(btn => {
+            btn.className = 'answer-btn';
+            btn.disabled = false;
         });
 
         if(btnExplanationEdition) btnExplanationEdition.classList.add('hidden');
         if(btnExplanationField) btnExplanationField.classList.add('hidden');
         if(btnExplanationShuffle) btnExplanationShuffle.classList.add('hidden');
         if(btnExplanationWeak) btnExplanationWeak.classList.add('hidden');
-        
-        // 試験終了ボタン制御
+
         if (isExamMode && finishExamBtn && nextBtn) {
             if (currentFieldIndex >= currentFieldQuestions.length - 1) {
                 nextBtn.classList.add('hidden');
@@ -387,9 +368,7 @@ async function renderPageInternal(pdfPageNum) {
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
         }
 
-        // 表紙スキップ (+1)
-        const pageObj = await pdfDoc.getPage(pdfPageNum + 1); 
-        
+        const pageObj = await pdfDoc.getPage(pdfPageNum + 1);
         const viewport = pageObj.getViewport({ scale: 1.8 });
         const context = canvas.getContext('2d');
         canvas.height = viewport.height; canvas.width = viewport.width;
@@ -399,9 +378,9 @@ async function renderPageInternal(pdfPageNum) {
         if (currentFieldQuestions.length > 0 && currentFieldQuestions[currentFieldIndex]) {
             const question = currentFieldQuestions[currentFieldIndex];
             const subject = question.subject || (subjectSelectField ? subjectSelectField.value : '') || (subjectSelectEdition ? subjectSelectEdition.value : '');
-            
+
             if(pageNumSpan) pageNumSpan.textContent = currentFieldIndex + 1;
-            
+
             let editionDisplayText = `第${question.edition}回`;
             if (editionSelect) {
                 for (let i = 0; i < editionSelect.options.length; i++) {
@@ -410,15 +389,15 @@ async function renderPageInternal(pdfPageNum) {
                     }
                 }
             }
-            
-            const subjName = subjectMap[subject] || subject; 
+
+            const subjName = subjectMap[subject] || subject;
             if(questionSource) {
                 questionSource.textContent = `[${subjName}] ${editionDisplayText} 問${question.pageNum}`;
                 questionSource.style.display = 'inline';
             }
-            
+
             const currentQuestionId = getQuestionId(question.edition, subject, question.pageNum);
-            
+
             if(resultAreaEdition) resultAreaEdition.textContent = '';
             if(resultAreaField) resultAreaField.textContent = '';
             if(resultAreaShuffle) resultAreaShuffle.textContent = '';
@@ -437,9 +416,7 @@ async function renderPageInternal(pdfPageNum) {
                 const correctButton = activePanel.querySelector(`.answer-btn[data-choice="${history.correctAnswer}"]`);
 
                 if (isExamMode) {
-                    if (selectedButton) {
-                        selectedButton.classList.add('selected-answer-exam');
-                    }
+                    if (selectedButton) selectedButton.classList.add('selected-answer-exam');
                     activeResultArea.textContent = '解答済み';
                 } else {
                     if (history.correct) {
@@ -454,7 +431,7 @@ async function renderPageInternal(pdfPageNum) {
                     }
                     if(activeExplanationBtn) activeExplanationBtn.classList.remove('hidden');
                 }
-                
+
                 activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
             }
         }
@@ -462,7 +439,6 @@ async function renderPageInternal(pdfPageNum) {
     } catch (error) { console.error("❌ ページ描画エラー:", error); }
 }
 
-/** 分野別プルダウン生成 */
 function populateFieldSelector() {
     if (!subjectSelectField || !selectItems || !selectSelected) return;
 
@@ -488,8 +464,8 @@ function populateFieldSelector() {
         const barWidthPercent = Math.max(Math.round(ratio * 100), 5);
 
         optionDiv.innerHTML = `
-            <span class="field-name">${field.fieldName} (${questionCount}問)</span>
-            <span class="freq-bar ${colorClass}" style="width:${barWidthPercent}%"></span>
+            ${field.fieldName} (${questionCount}問)
+            <div class="freq-bar-bg"><div class="freq-bar ${colorClass}" style="width:${barWidthPercent}%"></div></div>
         `;
         optionDiv.dataset.value = index;
         optionDiv.dataset.text = `${field.fieldName} (${questionCount}問)`;
@@ -507,11 +483,10 @@ function populateFieldSelector() {
     });
 }
 
-/** 問題表示 (全モード共通) */
 async function displayFieldQuestion(index) {
     if (!currentFieldQuestions[index]) return;
     const question = currentFieldQuestions[index];
-    
+
     await loadAnswersForEdition(question.edition);
     await loadExplanations(question.edition);
 
@@ -519,7 +494,6 @@ async function displayFieldQuestion(index) {
     await renderPdf(question.edition, subject, parseInt(question.pageNum, 10));
 }
 
-/** 正答数更新 */
 function updateScoreDisplay() {
     if(scoreCorrectEdition) scoreCorrectEdition.textContent = correctCount;
     if(scoreCorrectField) scoreCorrectField.textContent = correctCount;
@@ -527,11 +501,8 @@ function updateScoreDisplay() {
     if(scoreCorrectWeak) scoreCorrectWeak.textContent = correctCount;
 }
 
-/** 正誤判定 */
 function checkAnswer(selectedChoice) {
     const questionId = getCurrentQuestionId();
-
-    // ★ activeMode を使って一元的にアクティブパネルを取得
     const { panel: activePanel, resultArea, explanationBtn } = getActivePanelContext();
 
     if (!resultArea || !activePanel) return;
@@ -587,18 +558,16 @@ function checkAnswer(selectedChoice) {
     }
 }
 
-/** 試験終了処理 */
 function finishExam() {
     stopTimer();
     showResults();
 }
 
-/** 成績ページ表示 */
 function showResults() {
     if(!exerciseView || !resultsPanel || !resultsList || !resultsSummary) return;
     exerciseView.classList.add('hidden'); resultsPanel.classList.remove('hidden');
     window.scrollTo(0, 0);
-    
+
     let finalTime = "--:--";
     if (isExamMode) {
         stopTimer();
@@ -611,9 +580,9 @@ function showResults() {
     }
 
     const totalQuestions = currentSessionQuestions.length;
-    let answeredCount = 0; 
-    let sessionCorrectCount = 0; 
-    
+    let answeredCount = 0;
+    let sessionCorrectCount = 0;
+
     resultsList.innerHTML = '';
     const table = document.createElement('table');
     table.innerHTML = `
@@ -621,7 +590,7 @@ function showResults() {
         <tbody></tbody>
     `;
     const tbody = table.querySelector('tbody');
-    
+
     const certDetails = [];
 
     if (tbody) {
@@ -630,26 +599,26 @@ function showResults() {
             const questionId = getQuestionId(qInfo.edition, subject, qInfo.pageNum);
             const history = answerHistory[questionId];
             const tr = document.createElement('tr');
-            
+
             const questionNumDisplay = `第${qInfo.edition}回 問${qInfo.pageNum}`;
             let statusText = '未解答'; let statusClass = '';
             let yourAnswer = '-'; let correctAnswer = currentAnswers?.[subject]?.[qInfo.pageNum] ?? '?';
             let isCorrect = false;
 
             if (history) {
-                answeredCount++; 
-                yourAnswer = history.selected; 
+                answeredCount++;
+                yourAnswer = history.selected;
                 correctAnswer = history.correctAnswer;
                 if (history.correct === null) { statusText = '不明'; }
-                else if (history.correct) { 
-                    sessionCorrectCount++; 
-                    statusText = '正解'; 
-                    statusClass = 'result-status-correct'; 
+                else if (history.correct) {
+                    sessionCorrectCount++;
+                    statusText = '正解';
+                    statusClass = 'result-status-correct';
                     isCorrect = true;
                 }
-                else { 
-                    statusText = '不正解'; 
-                    statusClass = 'result-status-incorrect'; 
+                else {
+                    statusText = '不正解';
+                    statusClass = 'result-status-incorrect';
                 }
             }
             tr.innerHTML = `<td>${questionNumDisplay}</td><td class="${statusClass}">${statusText}</td><td>${yourAnswer}</td><td>${correctAnswer}</td><td><button class="review-btn" data-index="${index}">解き直す</button></td>`;
@@ -666,7 +635,7 @@ function showResults() {
         });
     }
     resultsList.appendChild(table);
-    
+
     const accuracy = totalQuestions > 0 ? ((sessionCorrectCount / totalQuestions) * 100).toFixed(1) : 0;
     resultsSummary.innerHTML = `総問題数: ${totalQuestions}問 / 解答済み: ${answeredCount}問<br>正答数: ${sessionCorrectCount}問 / 正答率: ${accuracy}%`;
 
@@ -675,7 +644,7 @@ function showResults() {
         if(certTimeValue) certTimeValue.textContent = finalTime;
         if(certSubjects) certSubjects.textContent = examSelectedSubjectsText;
         if(certDifficulties) certDifficulties.textContent = examSelectedDiffText;
-        
+
         if(certDetailsTableBody) {
             certDetailsTableBody.innerHTML = '';
             certDetails.forEach(d => {
@@ -691,10 +660,10 @@ function showResults() {
         }
 
         if (certImageContainer) {
-            certImageContainer.innerHTML = ''; 
+            certImageContainer.innerHTML = '';
             setTimeout(() => {
                 html2canvas(certificateContainer, {
-                    scale: 2, 
+                    scale: 2,
                     backgroundColor: "#fffdf5"
                 }).then(canvas => {
                     const imgData = canvas.toDataURL("image/png");
@@ -711,15 +680,15 @@ function showResults() {
     } else {
         if(certImageContainer) certImageContainer.classList.add('hidden');
     }
-    
+
     document.querySelectorAll('.review-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const index = parseInt(e.target.dataset.index, 10);
             if (index < 0 || index >= currentSessionQuestions.length) return;
             resultsPanel.classList.add('hidden'); exerciseView.classList.remove('hidden');
-            
+
             isExamMode = false;
-            if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden'); 
+            if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
             if(finishExamBtn) finishExamBtn.classList.add('hidden');
             if(nextBtn) nextBtn.classList.remove('hidden');
 
@@ -730,7 +699,6 @@ function showResults() {
     });
 }
 
-/** 解説を表示する関数 */
 function showExplanationModal() {
     let subjectKey = "";
     let pageNum = "";
@@ -784,13 +752,11 @@ function showExplanationModal() {
     explanationModal.style.display = 'block';
 }
 
-/** カスタムセレクトを閉じる */
 function closeCustomSelect() {
     if(selectItems) selectItems.classList.add('select-hide');
     if(selectSelected) selectSelected.classList.remove('select-arrow-active');
 }
 
-// --- イベントリスナー設定 ---
 function setupEventListeners() {
     answerButtonsNodeList = document.querySelectorAll('.answer-btn');
 
@@ -798,49 +764,50 @@ function setupEventListeners() {
     const panels = [panelByEdition, panelByField, panelShuffle];
     const panelWeakEl = document.getElementById('panel-weak');
 
-if (tabByEdition) tabByEdition.addEventListener('click', () => {
-    activeMode = 'edition';
-    resetAllAnswerButtons();
-    // ★ 追加
-    currentFieldQuestions = [];
-    currentFieldIndex = 0;
-    answerHistory = {};
-    if (weakAnswerArea) weakAnswerArea.style.display = 'none';
-    tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
-    panels.forEach(p => p.classList.add('hidden'));
-    if (panelWeakEl) panelWeakEl.classList.add('hidden');
-    panelByEdition.classList.remove('hidden');
-    if(questionSource) questionSource.style.display = 'none';
-    isExamMode = false;
-});
+    // ★ 年度別タブ
+    if (tabByEdition) tabByEdition.addEventListener('click', () => {
+        activeMode = 'edition';
+        resetAllAnswerButtons();
+        resetExerciseState();
+        tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
+        panels.forEach(p => p.classList.add('hidden'));
+        if (panelWeakEl) panelWeakEl.classList.add('hidden');
+        panelByEdition.classList.remove('hidden');
+        isExamMode = false;
+    });
 
+    // ★ 分野別タブ
     if (tabByField) tabByField.addEventListener('click', () => {
         activeMode = 'field';
-        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
+        resetAllAnswerButtons();
+        resetExerciseState();
         tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
         panels.forEach(p => p.classList.add('hidden'));
         if (panelWeakEl) panelWeakEl.classList.add('hidden');
         panelByField.classList.remove('hidden');
         isExamMode = false;
     });
+
+    // ★ シャッフルタブ
     if (tabShuffle) tabShuffle.addEventListener('click', () => {
         activeMode = 'shuffle';
-        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
+        resetAllAnswerButtons();
+        resetExerciseState();
         tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
         panels.forEach(p => p.classList.add('hidden'));
         if (panelWeakEl) panelWeakEl.classList.add('hidden');
         panelShuffle.classList.remove('hidden');
-        isExamMode = false; 
+        isExamMode = false;
     });
 
     // 年度別「表示」
     if (goBtnEdition) goBtnEdition.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
         correctCount = 0; updateScoreDisplay(); answerHistory = {}; isExamMode = false;
-        
+
         const selectedEdition = editionSelect ? editionSelect.value : '';
         const selectedSubject = subjectSelectEdition ? subjectSelectEdition.value : '';
-        
+
         const url = `./pdf/${selectedEdition}/${selectedEdition}_${selectedSubject}.pdf`;
         showLoading(true);
         let tempQuestions = [];
@@ -852,8 +819,8 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
                 tempQuestions.push({ edition: selectedEdition, subject: selectedSubject, pageNum: i });
             }
         } catch (error) {
-             console.error("PDF読込失敗", error); alert(`PDFファイルが見つかりません:\n${url}`);
-             showLoading(false); return;
+            console.error("PDF読込失敗", error); alert(`PDFファイルが見つかりません:\n${url}`);
+            showLoading(false); return;
         }
 
         currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, selectedSubject);
@@ -868,7 +835,7 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
         populateJumpSelector(currentFieldQuestions);
         currentFieldIndex = 0;
-        
+
         await displayFieldQuestion(0);
         showLoading(false);
     });
@@ -880,21 +847,21 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
         const subject = subjectSelectField ? subjectSelectField.value : '';
         const fieldIndex = selectSelected ? selectSelected.dataset.value : '';
         if (fieldIndex === "" || !fieldsData[subject] || !fieldsData[subject][fieldIndex]) {
-             alert("分野を選択してください。"); return;
+            alert("分野を選択してください。"); return;
         }
-        
+
         let tempQuestions = fieldsData[subject][fieldIndex].questions;
         tempQuestions = tempQuestions.map(q => ({q, subject: subject}));
-        
+
         currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, subject);
         currentSessionQuestions = currentFieldQuestions;
-        
+
         if (currentFieldQuestions.length === 0) {
             alert("該当する難易度の問題がありません。"); return;
         }
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
         populateJumpSelector(currentFieldQuestions);
-        
+
         showLoading(true);
         currentFieldIndex = 0;
         await displayFieldQuestion(currentFieldIndex);
@@ -905,7 +872,7 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
     if (goBtnShuffle) goBtnShuffle.addEventListener('click', async () => {
         if(welcomeOverlay) welcomeOverlay.style.display = 'none'; window.scrollTo(0, 0);
         correctCount = 0; updateScoreDisplay(); answerHistory = {};
-        
+
         const targetSubjects = new Set();
         const selectedSubjectsTexts = [];
         shuffleSubjectCheckboxes.forEach(cb => {
@@ -914,14 +881,14 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
                 selectedSubjectsTexts.push(cb.parentNode.textContent.trim());
             }
         });
-        
+
         if (targetSubjects.size === 0) {
             alert("出題科目を少なくとも1つ選択してください。"); return;
         }
 
         const allowedDiff = new Set();
         const selectedDiffTexts = [];
-        shuffleDiffCheckboxes.forEach(cb => { 
+        shuffleDiffCheckboxes.forEach(cb => {
             if (cb.checked) {
                 allowedDiff.add(cb.value);
                 selectedDiffTexts.push(cb.parentNode.textContent.trim());
@@ -945,7 +912,7 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
                     field.questions.forEach(q => {
                         const subject = subjKey;
                         const id = getQuestionId(q.edition, subject, q.pageNum);
-                        
+
                         if (!seenIds.has(id)) {
                             const diff = difficultyMap[id];
                             let isMatch = false;
@@ -964,21 +931,21 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
                 });
             }
         });
-        
+
         if (candidates.length === 0) {
             alert("条件に合致する問題がありません。"); return;
         }
-        
+
         shuffleArray(candidates);
-        currentFieldQuestions = candidates.slice(0, 5); 
+        currentFieldQuestions = candidates.slice(0, 5);
         currentSessionQuestions = currentFieldQuestions;
-        
+
         if(pageCountSpan) pageCountSpan.textContent = currentFieldQuestions.length;
         populateJumpSelector(currentFieldQuestions);
-        
+
         isExamMode = true;
         resetTimer();
-        
+
         if(scoreCorrectShuffle) scoreCorrectShuffle.parentElement.classList.remove('hidden');
 
         showLoading(true);
@@ -1017,23 +984,34 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
     if (subjectSelectField) subjectSelectField.addEventListener('change', populateFieldSelector);
 
     if (prevBtn) prevBtn.addEventListener('click', () => {
-        if (currentFieldIndex > 0) { 
-            currentFieldIndex--; 
-            displayFieldQuestion(currentFieldIndex); 
+        if (currentFieldIndex > 0) {
+            currentFieldIndex--;
+            displayFieldQuestion(currentFieldIndex);
         }
     });
     if (nextBtn) nextBtn.addEventListener('click', () => {
-        if (currentFieldIndex < currentFieldQuestions.length - 1) { 
-            currentFieldIndex++; 
+        if (currentFieldIndex < currentFieldQuestions.length - 1) {
+            currentFieldIndex++;
             displayFieldQuestion(currentFieldIndex);
         }
     });
 
+    // ★ 修正：control-panel チェックを廃止し、activeMode で判定
     if (answerButtonsNodeList) answerButtonsNodeList.forEach(button => {
         button.addEventListener('click', (e) => {
-            const parentPanel = e.currentTarget.closest('.control-panel');
-            if (!parentPanel || parentPanel.classList.contains('hidden')) return;
             if (e.currentTarget.disabled) return;
+            // ボタンが属するパネルが現在のactiveModeと一致するか確認
+            const panelWeakEl = document.getElementById('panel-weak');
+            const btnPanel = e.currentTarget.closest('#panel-by-edition, #panel-by-field, #panel-shuffle, #panel-weak');
+            if (!btnPanel) return;
+            const panelId = btnPanel.id;
+            const expectedPanelId = {
+                'edition': 'panel-by-edition',
+                'field': 'panel-by-field',
+                'shuffle': 'panel-shuffle',
+                'weak': 'panel-weak'
+            }[activeMode];
+            if (panelId !== expectedPanelId) return;
             checkAnswer(e.currentTarget.dataset.choice);
         });
     });
@@ -1045,7 +1023,7 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
             displayFieldQuestion(currentFieldIndex);
         }
     });
-    
+
     if (showResultsBtnEdition) showResultsBtnEdition.addEventListener('click', showResults);
     if (showResultsBtnField) showResultsBtnField.addEventListener('click', showResults);
     if (showResultsBtnShuffle) showResultsBtnShuffle.addEventListener('click', showResults);
@@ -1073,10 +1051,7 @@ if (tabByEdition) tabByEdition.addEventListener('click', () => {
     });
 }
 
-/** 初期化処理 */
 async function initialize() {
-    console.log("🔄 アプリケーションの初期化を開始...");
-
     exerciseView = document.getElementById('exercise-view');
     resultsPanel = document.getElementById('results-panel');
     welcomeOverlay = document.getElementById('welcome-overlay');
@@ -1087,14 +1062,14 @@ async function initialize() {
     prevBtn = document.getElementById('prev-btn');
     nextBtn = document.getElementById('next-btn');
     jumpToSelect = document.getElementById('jump-to-select');
-    
+
     tabByEdition = document.getElementById('tab-by-edition');
     tabByField = document.getElementById('tab-by-field');
-    tabShuffle = document.getElementById('tab-shuffle'); 
+    tabShuffle = document.getElementById('tab-shuffle');
 
     panelByEdition = document.getElementById('panel-by-edition');
     panelByField = document.getElementById('panel-by-field');
-    panelShuffle = document.getElementById('panel-shuffle'); 
+    panelShuffle = document.getElementById('panel-shuffle');
 
     editionSelect = document.getElementById('edition-select');
     subjectSelectEdition = document.getElementById('subject-select-edition');
@@ -1102,7 +1077,7 @@ async function initialize() {
     resultAreaEdition = document.getElementById('result-area-edition');
     scoreCorrectEdition = panelByEdition ? panelByEdition.querySelector('.score-correct') : null;
     showResultsBtnEdition = document.getElementById('show-results-btn-edition');
-    
+
     subjectSelectField = document.getElementById('subject-select-field');
     customSelect = document.getElementById('field-select-custom');
     selectSelected = customSelect ? customSelect.querySelector('.select-selected') : null;
@@ -1111,19 +1086,19 @@ async function initialize() {
     resultAreaField = document.getElementById('result-area-field');
     scoreCorrectField = panelByField ? panelByField.querySelector('.score-correct') : null;
     showResultsBtnField = document.getElementById('show-results-btn-field');
-    
+
     goBtnShuffle = document.getElementById('go-btn-shuffle');
     resultAreaShuffle = document.getElementById('result-area-shuffle');
     scoreCorrectShuffle = panelShuffle ? panelShuffle.querySelector('.score-correct') : null;
     showResultsBtnShuffle = document.getElementById('show-results-btn-shuffle');
-    finishExamBtn = document.getElementById('finish-exam-btn'); 
-    
+    finishExamBtn = document.getElementById('finish-exam-btn');
+
     difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
     filterCheckboxes = document.querySelectorAll('.diff-filter-cb');
-    shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb'); 
-    shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb'); 
+    shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb');
+    shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb');
     difficultyBadge = document.getElementById('difficulty-badge');
-    examTimerSpan = document.getElementById('exam-timer'); 
+    examTimerSpan = document.getElementById('exam-timer');
 
     questionSource = document.getElementById('question-source');
     resultsSummary = document.getElementById('results-summary');
@@ -1131,7 +1106,7 @@ async function initialize() {
     backToExerciseBtn = document.getElementById('back-to-exercise-btn');
 
     certificateContainer = document.getElementById('certificate-container');
-    certImageContainer = document.getElementById('cert-image-container'); 
+    certImageContainer = document.getElementById('cert-image-container');
     certScoreNum = document.getElementById('cert-score-num');
     certTimeValue = document.getElementById('cert-time-value');
     certSubjects = document.getElementById('cert-subjects');
@@ -1157,16 +1132,10 @@ async function initialize() {
 
     setupLoginUI();
     setupWeakUI();
-
     setupEventListeners();
     setupCsvUploadUI();
-
-    console.log("✅ 初期化完了。");
 }
 
-// ============================================================
-// ログイン機能
-// ============================================================
 function setupLoginUI() {
   const loginOverlay = document.getElementById('login-overlay');
   const loginBtn = document.getElementById('login-btn');
@@ -1235,9 +1204,6 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ============================================================
-// 理解度データ取得
-// ============================================================
 async function loadUnderstandingData() {
   if (!currentUser) return;
   try {
@@ -1254,9 +1220,6 @@ async function loadUnderstandingData() {
   }
 }
 
-// ============================================================
-// 理解度パネル表示・送信
-// ============================================================
 function showUnderstandingPanel(questionId, isCorrect) {
   if (!currentUser) return;
   pendingUnderstandingQuestionId = questionId;
@@ -1269,14 +1232,12 @@ function showUnderstandingPanel(questionId, isCorrect) {
       panel.style.display = 'none';
       await saveUnderstanding(questionId, level, isCorrect);
 
-      // ★ 理解度入力後、自動で次の問題へ移行
       if (currentFieldIndex < currentFieldQuestions.length - 1) {
         currentFieldIndex++;
         displayFieldQuestion(currentFieldIndex);
       } else if (isExamMode) {
         finishExam();
       }
-      // 最終問題かつ通常モードの場合は何もしない
     };
   });
 }
@@ -1306,9 +1267,6 @@ async function saveUnderstanding(questionId, level, isCorrect) {
   }
 }
 
-// ============================================================
-// 苦手問題演習
-// ============================================================
 function setupWeakUI() {
   const tabWeak = document.getElementById('tab-weak');
   const panelWeak = document.getElementById('panel-weak');
@@ -1316,22 +1274,18 @@ function setupWeakUI() {
   const showResultsBtnWeak = document.getElementById('show-results-btn-weak');
   const weakSubjectFilter = document.getElementById('weak-subject-filter');
 
-if (tabWeak) tabWeak.addEventListener('click', () => {
+  // ★ 苦手問題タブ
+  if (tabWeak) tabWeak.addEventListener('click', () => {
     activeMode = 'weak';
     resetAllAnswerButtons();
+    resetExerciseState();
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     tabWeak.classList.add('active');
     [panelByEdition, panelByField, panelShuffle].forEach(p => { if(p) p.classList.add('hidden'); });
     if (panelWeak) panelWeak.classList.remove('hidden');
     isExamMode = false;
-    // ★ 追加：演習状態をリセット
-    currentFieldQuestions = [];
-    currentFieldIndex = 0;
-    answerHistory = {};
-    if (weakAnswerArea) weakAnswerArea.style.display = 'none'; // ← 追加
     updateWeakCount();
-});
-
+  });
 
   if (weakSubjectFilter) weakSubjectFilter.addEventListener('change', updateWeakCount);
   document.querySelectorAll('input[name="weak-level"]').forEach(r => {
@@ -1410,10 +1364,6 @@ function showCurrentUser(userId) {
   }
   userDisplay.textContent = `👤 ${userId} でログイン中`;
 }
-
-// ============================================================
-// 難易度CSVアップロード機能
-// ============================================================
 
 const subjectNameToKey = {
   '法規': 'houki', '管理': 'kanri', '一基': 'ichiki', '計質': 'keishitsu',
