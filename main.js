@@ -98,6 +98,22 @@ function getActivePanelContext() {
     }
 }
 
+// ★ タブ切り替え時に全パネルのボタン・結果表示をリセットする共通関数
+function resetAllAnswerButtons() {
+    document.querySelectorAll('.answer-btn').forEach(btn => {
+        btn.className = 'answer-btn';
+        btn.disabled = false;
+    });
+    if(resultAreaEdition) { resultAreaEdition.textContent = ''; resultAreaEdition.className = 'result-area'; }
+    if(resultAreaField)   { resultAreaField.textContent = '';   resultAreaField.className = 'result-area'; }
+    if(resultAreaShuffle) { resultAreaShuffle.textContent = ''; resultAreaShuffle.className = 'result-area'; }
+    if(resultAreaWeak)    { resultAreaWeak.textContent = '';    resultAreaWeak.className = 'result-area'; }
+    if(btnExplanationEdition) btnExplanationEdition.classList.add('hidden');
+    if(btnExplanationField)   btnExplanationField.classList.add('hidden');
+    if(btnExplanationShuffle) btnExplanationShuffle.classList.add('hidden');
+    if(btnExplanationWeak)    btnExplanationWeak.classList.add('hidden');
+}
+
 /** 索引ファイル(editionsjson)読込 */
 async function setupEditionSelector() {
     if (!editionSelect) return;
@@ -127,7 +143,7 @@ async function loadFieldsData() {
     } catch (error) { console.error("❌ fields.json読込エラー:", error); }
 }
 
-/** 難易度ファイル(difficulty.json)読込 */
+/** 難易度データ読込 */
 async function loadDifficultyData() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?select=*`, {
@@ -184,10 +200,8 @@ function isDifficultyAllowed(questionId) {
     filterCheckboxes.forEach(cb => {
         if (cb.checked) allowed.add(cb.value);
     });
-
     const isAllChecked = allowed.has('A') && allowed.has('B') && allowed.has('C');
     const difficulty = difficultyMap[questionId];
-    
     if (!difficulty) {
         return allowed.has('none') || isAllChecked;
     }
@@ -216,10 +230,8 @@ function shuffleArray(array) {
 //  タイマー機能
 // ==========================================
 
-/** 表示更新 */
 function updateTimerDisplay() {
     if (!examTimerSpan) return;
-    
     let totalSeconds = 0;
     if (isTimerRunning) {
         const currentSession = Date.now() - examStartTime;
@@ -227,38 +239,31 @@ function updateTimerDisplay() {
     } else {
         totalSeconds = Math.floor(examAccumulatedTime / 1000);
     }
-
     const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
     const seconds = (totalSeconds % 60).toString().padStart(2, '0');
     examTimerSpan.textContent = `${minutes}:${seconds}`;
 }
 
-/** タイマー開始 (再開) */
 function startTimer() {
     if (isTimerRunning) return; 
     examStartTime = Date.now();
     isTimerRunning = true;
-    
     if(examTimerSpan) examTimerSpan.classList.remove('hidden');
     updateTimerDisplay(); 
     examTimerInterval = setInterval(updateTimerDisplay, 1000);
 }
 
-/** タイマー停止 (一時停止・終了) */
 function stopTimer() {
     if (!isTimerRunning) return;
-
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
         examTimerInterval = null;
     }
-    
     examAccumulatedTime += Date.now() - examStartTime;
     isTimerRunning = false;
     updateTimerDisplay(); 
 }
 
-/** タイマーリセット */
 function resetTimer() {
     if (examTimerInterval) {
         clearInterval(examTimerInterval);
@@ -270,7 +275,6 @@ function resetTimer() {
     if (examTimerSpan) examTimerSpan.textContent = "00:00";
 }
 
-/** 最終時間取得文字列 */
 function getFinalTimeStr() {
     const totalSeconds = Math.floor(examAccumulatedTime / 1000);
     const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -326,25 +330,18 @@ function populateJumpSelector(questions) {
 /** 難易度表示の更新 */
 function updateDifficultyDisplay(questionId) {
     const isVisible = difficultyToggles.length > 0 && difficultyToggles[0].checked;
-    
     if (!difficultyBadge) return;
-
     const difficulty = difficultyMap[questionId];
-
     if (isVisible && difficulty) {
         let displayText = difficulty;
         let colorClass = 'diff-normal';
-
         if (difficulty === 'A') { displayText = "A(易)"; colorClass = 'diff-easy'; }
         else if (difficulty === 'B') { displayText = "B(普)"; colorClass = 'diff-normal'; }
         else if (difficulty === 'C') { displayText = "C(難)"; colorClass = 'diff-hard'; }
-
         difficultyBadge.textContent = `難易度: ${displayText}`;
         difficultyBadge.classList.remove('hidden');
-        
         difficultyBadge.className = 'difficulty-badge'; 
         difficultyBadge.classList.add(colorClass);
-        
     } else {
         difficultyBadge.classList.add('hidden');
     }
@@ -406,13 +403,13 @@ async function renderPageInternal(pdfPageNum) {
             if(pageNumSpan) pageNumSpan.textContent = currentFieldIndex + 1;
             
             let editionDisplayText = `第${question.edition}回`;
-             if (editionSelect) {
-                 for (let i = 0; i < editionSelect.options.length; i++) {
-                     if (editionSelect.options[i].value === question.edition) {
-                         editionDisplayText = editionSelect.options[i].textContent; break;
-                     }
-                 }
-             }
+            if (editionSelect) {
+                for (let i = 0; i < editionSelect.options.length; i++) {
+                    if (editionSelect.options[i].value === question.edition) {
+                        editionDisplayText = editionSelect.options[i].textContent; break;
+                    }
+                }
+            }
             
             const subjName = subjectMap[subject] || subject; 
             if(questionSource) {
@@ -430,7 +427,6 @@ async function renderPageInternal(pdfPageNum) {
             updateNavButtons();
             updateDifficultyDisplay(currentQuestionId);
 
-            // 未解答かつ試験モードならタイマーをスタート（再開）
             const history = answerHistory[currentQuestionId];
             if (isExamMode && !history) {
                 startTimer();
@@ -492,8 +488,8 @@ function populateFieldSelector() {
         const barWidthPercent = Math.max(Math.round(ratio * 100), 5);
 
         optionDiv.innerHTML = `
-            ${field.fieldName} (${questionCount}問)
-              
+            <span class="field-name">${field.fieldName} (${questionCount}問)</span>
+            <span class="freq-bar ${colorClass}" style="width:${barWidthPercent}%"></span>
         `;
         optionDiv.dataset.value = index;
         optionDiv.dataset.text = `${field.fieldName} (${questionCount}問)`;
@@ -586,7 +582,6 @@ function checkAnswer(selectedChoice) {
 
     activeAnswerButtons.forEach(btn => { btn.disabled = true; btn.classList.add('disabled'); });
 
-    // 理解度パネル表示（ログインユーザーのみ）
     if (currentUser) {
         showUnderstandingPanel(questionId, isCorrect);
     }
@@ -675,7 +670,6 @@ function showResults() {
     const accuracy = totalQuestions > 0 ? ((sessionCorrectCount / totalQuestions) * 100).toFixed(1) : 0;
     resultsSummary.innerHTML = `総問題数: ${totalQuestions}問 / 解答済み: ${answeredCount}問<br>正答数: ${sessionCorrectCount}問 / 正答率: ${accuracy}%`;
 
-    // 証明書生成
     if (certificateContainer && !certificateContainer.classList.contains('hidden')) {
         if(certScoreNum) certScoreNum.textContent = sessionCorrectCount;
         if(certTimeValue) certTimeValue.textContent = finalTime;
@@ -722,7 +716,6 @@ function showResults() {
         button.addEventListener('click', (e) => {
             const index = parseInt(e.target.dataset.index, 10);
             if (index < 0 || index >= currentSessionQuestions.length) return;
-            const questionInfo = currentSessionQuestions[index];
             resultsPanel.classList.add('hidden'); exerciseView.classList.remove('hidden');
             
             isExamMode = false;
@@ -806,7 +799,8 @@ function setupEventListeners() {
     const panelWeakEl = document.getElementById('panel-weak');
 
     if (tabByEdition) tabByEdition.addEventListener('click', () => {
-        activeMode = 'edition'; // ★
+        activeMode = 'edition';
+        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
         tabs.forEach(t => t.classList.remove('active')); tabByEdition.classList.add('active');
         panels.forEach(p => p.classList.add('hidden'));
         if (panelWeakEl) panelWeakEl.classList.add('hidden');
@@ -815,7 +809,8 @@ function setupEventListeners() {
         isExamMode = false;
     });
     if (tabByField) tabByField.addEventListener('click', () => {
-        activeMode = 'field'; // ★
+        activeMode = 'field';
+        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
         tabs.forEach(t => t.classList.remove('active')); tabByField.classList.add('active');
         panels.forEach(p => p.classList.add('hidden'));
         if (panelWeakEl) panelWeakEl.classList.add('hidden');
@@ -823,7 +818,8 @@ function setupEventListeners() {
         isExamMode = false;
     });
     if (tabShuffle) tabShuffle.addEventListener('click', () => {
-        activeMode = 'shuffle'; // ★
+        activeMode = 'shuffle';
+        resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
         tabs.forEach(t => t.classList.remove('active')); tabShuffle.classList.add('active');
         panels.forEach(p => p.classList.add('hidden'));
         if (panelWeakEl) panelWeakEl.classList.add('hidden');
@@ -844,7 +840,7 @@ function setupEventListeners() {
         let tempQuestions = [];
         try {
             const tempLoadingTask = pdfjsLib.getDocument(url);
-            const tempPdfDoc = await tempLoadingTaskpromise;
+            const tempPdfDoc = await tempLoadingTask.promise;
             const total = tempPdfDoc.numPages > 1 ? tempPdfDoc.numPages - 1 : 0;
             for (let i = 1; i <= total; i++) {
                 tempQuestions.push({ edition: selectedEdition, subject: selectedSubject, pageNum: i });
@@ -1315,7 +1311,8 @@ function setupWeakUI() {
   const weakSubjectFilter = document.getElementById('weak-subject-filter');
 
   if (tabWeak) tabWeak.addEventListener('click', () => {
-    activeMode = 'weak'; // ★
+    activeMode = 'weak';
+    resetAllAnswerButtons(); // ★ 全パネルのボタンをリセット
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     tabWeak.classList.add('active');
     [panelByEdition, panelByField, panelShuffle].forEach(p => { if(p) p.classList.add('hidden'); });
