@@ -1248,13 +1248,13 @@ async function saveUnderstanding(questionId, level, isCorrect) {
   understandingMap[questionId] = { understanding: level, isCorrect };
   updateWeakCount();
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/understanding`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/understanding`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
+        'Prefer': 'resolution=merge-duplicates,return=minimal'  // ← return=minimal を追加
       },
       body: JSON.stringify({
         user_id: currentUser.userId,
@@ -1263,6 +1263,10 @@ async function saveUnderstanding(questionId, level, isCorrect) {
         updated_at: new Date().toISOString()
       })
     });
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn('理解度保存エラー:', res.status, err);
+    }
   } catch (e) {
     console.warn('理解度送信失敗', e);
   }
