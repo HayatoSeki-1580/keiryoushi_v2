@@ -1248,13 +1248,14 @@ async function saveUnderstanding(questionId, level, isCorrect) {
   understandingMap[questionId] = { understanding: level, isCorrect };
   updateWeakCount();
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/understanding`, {
+    // ↓ ?on_conflict=user_id,question_id を追加
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/understanding?on_conflict=user_id,question_id`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'  // ← return=minimal を追加
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
       },
       body: JSON.stringify({
         user_id: currentUser.userId,
@@ -1271,6 +1272,7 @@ async function saveUnderstanding(questionId, level, isCorrect) {
     console.warn('理解度送信失敗', e);
   }
 }
+
 
 function setupWeakUI() {
   const tabWeak = document.getElementById('tab-weak');
