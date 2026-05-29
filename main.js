@@ -1462,13 +1462,13 @@ function setupCsvUploadUI() {
         return;
       }
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?on_conflict=subject,edition,question_num`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates'
+          'Prefer': 'resolution=merge-duplicates,return=minimal'
         },
         body: JSON.stringify(records)
       });
@@ -1482,6 +1482,7 @@ function setupCsvUploadUI() {
         status.textContent = `❌ エラー: ${err}`;
         status.style.color = 'red';
       }
+
     } catch (e) {
       status.textContent = `❌ 処理エラー: ${e.message}`;
       status.style.color = 'red';
