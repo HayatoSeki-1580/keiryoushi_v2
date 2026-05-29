@@ -146,7 +146,7 @@ async function loadFieldsData() {
 
 async function loadDifficultyData() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?select=*`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?on_conflict=subject,edition,question_num`, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     });
     const rows = await res.json();
