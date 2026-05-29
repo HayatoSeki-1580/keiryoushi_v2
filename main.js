@@ -852,7 +852,7 @@ function setupEventListeners() {
         }
 
         let tempQuestions = fieldsData[subject][fieldIndex].questions;
-        tempQuestions = tempQuestions.map(q => ({q, subject: subject}));
+        tempQuestions = tempQuestions.map(q => ({...q, subject: subject}));
 
         currentFieldQuestions = filterQuestionsByDifficulty(tempQuestions, subject);
         currentSessionQuestions = currentFieldQuestions;
