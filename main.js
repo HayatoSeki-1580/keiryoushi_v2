@@ -1461,8 +1461,7 @@ function setupCsvUploadUI() {
         status.style.color = 'orange';
         return;
       }
-
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?on_conflict=subject,edition,question_num`, {
+const res = await fetch(`${SUPABASE_URL}/rest/v1/difficulty?on_conflict=subject%2Cedition%2Cquestion_num`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
