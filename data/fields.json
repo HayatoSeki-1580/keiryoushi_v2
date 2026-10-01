@@ -674,7 +674,12 @@
         { "edition": "72", "pageNum": "2" },
         { "edition": "72", "pageNum": "3" },
         { "edition": "72", "pageNum": "4" },
-        { "edition": "72", "pageNum": "5" }
+        { "edition": "72", "pageNum": "5" },
+        { "edition": "71", "pageNum": "1" },
+        { "edition": "71", "pageNum": "2" },
+        { "edition": "71", "pageNum": "3" },
+        { "edition": "71", "pageNum": "4" },
+        { "edition": "71", "pageNum": "5" }
       ]
     },
     {
@@ -686,7 +691,8 @@
         { "edition": "74", "pageNum": "21" },
         { "edition": "73", "pageNum": "7" },
         { "edition": "72", "pageNum": "6" },
-        { "edition": "72", "pageNum": "21" }
+        { "edition": "72", "pageNum": "21" },
+        { "edition": "71", "pageNum": "6" }
       ]
     },
     {
@@ -698,7 +704,8 @@
         { "edition": "73", "pageNum": "21" },
         { "edition": "72", "pageNum": "9" },
         { "edition": "72", "pageNum": "10" },
-        { "edition": "72", "pageNum": "18" }
+        { "edition": "72", "pageNum": "18" },
+        { "edition": "71", "pageNum": "9" }
       ]
     },
     {
@@ -710,7 +717,9 @@
         { "edition": "75", "pageNum": "8" },
         { "edition": "74", "pageNum": "14" },
         { "edition": "74", "pageNum": "17" },
-        { "edition": "73", "pageNum": "8" }
+        { "edition": "73", "pageNum": "8" },
+        { "edition": "71", "pageNum": "7" },
+        { "edition": "71", "pageNum": "16" }
       ]
     },
     {
@@ -720,7 +729,8 @@
         { "edition": "75", "pageNum": "17" },
         { "edition": "74", "pageNum": "7" },
         { "edition": "73", "pageNum": "9" },
-        { "edition": "72", "pageNum": "8" }
+        { "edition": "72", "pageNum": "8" },
+        { "edition": "71", "pageNum": "22" }
       ]
     },
     {
@@ -747,7 +757,9 @@
         { "edition": "74", "pageNum": "24" },
         { "edition": "73", "pageNum": "15" },
         { "edition": "73", "pageNum": "20" },
-        { "edition": "72", "pageNum": "17" }
+        { "edition": "72", "pageNum": "17" },
+        { "edition": "71", "pageNum": "8" },
+        { "edition": "71", "pageNum": "15" }
       ]
     },
     {
@@ -760,7 +772,9 @@
         { "edition": "73", "pageNum": "19" },
         { "edition": "73", "pageNum": "22" },
         { "edition": "72", "pageNum": "19" },
-        { "edition": "72", "pageNum": "20" }
+        { "edition": "72", "pageNum": "20" },
+        { "edition": "71", "pageNum": "18" },
+        { "edition": "71", "pageNum": "19" }
       ]
     },
     {
@@ -774,7 +788,8 @@
         { "edition": "73", "pageNum": "11" },
         { "edition": "73", "pageNum": "24" },
         { "edition": "73", "pageNum": "25" },
-        { "edition": "72", "pageNum": "16" }
+        { "edition": "72", "pageNum": "16" },
+        { "edition": "71", "pageNum": "10" }
       ]
     },
     {
@@ -788,7 +803,8 @@
         { "edition": "74", "pageNum": "9" },
         { "edition": "74", "pageNum": "24" },
         { "edition": "73", "pageNum": "12" },
-        { "edition": "72", "pageNum": "22" }
+        { "edition": "72", "pageNum": "22" },
+        { "edition": "71", "pageNum": "11" }
       ]
     },
     {
@@ -806,7 +822,10 @@
         { "edition": "73", "pageNum": "14" },
         { "edition": "72", "pageNum": "12" },
         { "edition": "72", "pageNum": "13" },
-        { "edition": "72", "pageNum": "14" }
+        { "edition": "72", "pageNum": "14" },
+        { "edition": "71", "pageNum": "12" },
+        { "edition": "71", "pageNum": "13" },
+        { "edition": "71", "pageNum": "14" }
       ]
     },
     {
@@ -814,7 +833,8 @@
       "questions": [
         { "edition": "75", "pageNum": "22" },
         { "edition": "74", "pageNum": "25" },
-        { "edition": "72", "pageNum": "11" }
+        { "edition": "72", "pageNum": "11" },
+        { "edition": "71", "pageNum": "24" }
       ]
     }
   ],
@@ -974,7 +994,8 @@
     {
       "fieldName": "JIS K 0122 イオン電極測定方法通則",
       "questions": [
-        { "edition": "73", "pageNum": "1" }
+        { "edition": "73", "pageNum": "1" },
+        { "edition": "71", "pageNum": "1" }
       ]
     },
     {
@@ -1126,6 +1147,7 @@
         { "edition": "72", "pageNum": "2" },
         { "edition": "72", "pageNum": "12" },
         { "edition": "72", "pageNum": "18" },
+        { "edition": "71", "pageNum": "2" },
         { "edition": "71", "pageNum": "12" },
         { "edition": "71", "pageNum": "18" }
       ]
