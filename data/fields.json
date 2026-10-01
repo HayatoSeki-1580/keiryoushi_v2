@@ -647,44 +647,174 @@
     }
   ],
 "kanka": [
-  {
-      "fieldName": "環境基本法",
+    {
+      "fieldName": "1. 環境関連法規",
       "questions": [
+        { "edition": "76", "pageNum": "1" },
+        { "edition": "76", "pageNum": "2" },
+        { "edition": "76", "pageNum": "3" },
+        { "edition": "76", "pageNum": "4" },
+        { "edition": "76", "pageNum": "5" },
         { "edition": "75", "pageNum": "1" },
-        { "edition": "74", "pageNum": "1" },
-        { "edition": "73", "pageNum": "1" },
-        { "edition": "72", "pageNum": "1" },
-        { "edition": "71", "pageNum": "1" }
-      ]
-    },  
-  {
-      "fieldName": "大気汚染防止法",
-      "questions": [
         { "edition": "75", "pageNum": "2" },
         { "edition": "75", "pageNum": "3" },
-        { "edition": "74", "pageNum": "2" },
-        { "edition": "74", "pageNum": "3" },
-        { "edition": "73", "pageNum": "2" },
-        { "edition": "73", "pageNum": "3" },
-        { "edition": "72", "pageNum": "2" },
-        { "edition": "72", "pageNum": "3" },
-        { "edition": "71", "pageNum": "2" },
-        { "edition": "71", "pageNum": "3" }
-      ]
-    },
-  {
-      "fieldName": "水質汚濁防止法",
-      "questions": [
         { "edition": "75", "pageNum": "4" },
         { "edition": "75", "pageNum": "5" },
+        { "edition": "74", "pageNum": "1" },
+        { "edition": "74", "pageNum": "2" },
+        { "edition": "74", "pageNum": "3" },
         { "edition": "74", "pageNum": "4" },
         { "edition": "74", "pageNum": "5" },
+        { "edition": "73", "pageNum": "1" },
+        { "edition": "73", "pageNum": "2" },
+        { "edition": "73", "pageNum": "3" },
         { "edition": "73", "pageNum": "4" },
         { "edition": "73", "pageNum": "5" },
+        { "edition": "72", "pageNum": "1" },
+        { "edition": "72", "pageNum": "2" },
+        { "edition": "72", "pageNum": "3" },
         { "edition": "72", "pageNum": "4" },
-        { "edition": "72", "pageNum": "5" },
-        { "edition": "71", "pageNum": "4" },
-        { "edition": "71", "pageNum": "5" }
+        { "edition": "72", "pageNum": "5" }
+      ]
+    },
+    {
+      "fieldName": "2. 物理化学：原子構造・放射線",
+      "questions": [
+        { "edition": "76", "pageNum": "6" },
+        { "edition": "75", "pageNum": "6" },
+        { "edition": "74", "pageNum": "6" },
+        { "edition": "74", "pageNum": "21" },
+        { "edition": "73", "pageNum": "7" },
+        { "edition": "72", "pageNum": "6" },
+        { "edition": "72", "pageNum": "21" }
+      ]
+    },
+    {
+      "fieldName": "3. 物理化学：化学結合・周期律",
+      "questions": [
+        { "edition": "75", "pageNum": "10" },
+        { "edition": "74", "pageNum": "10" },
+        { "edition": "74", "pageNum": "20" },
+        { "edition": "73", "pageNum": "21" },
+        { "edition": "72", "pageNum": "9" },
+        { "edition": "72", "pageNum": "10" },
+        { "edition": "72", "pageNum": "18" }
+      ]
+    },
+    {
+      "fieldName": "4. 物理化学：溶液・溶解度",
+      "questions": [
+        { "edition": "76", "pageNum": "7" },
+        { "edition": "76", "pageNum": "8" },
+        { "edition": "75", "pageNum": "7" },
+        { "edition": "75", "pageNum": "8" },
+        { "edition": "74", "pageNum": "14" },
+        { "edition": "74", "pageNum": "17" },
+        { "edition": "73", "pageNum": "8" }
+      ]
+    },
+    {
+      "fieldName": "5. 物理化学：酸・塩基",
+      "questions": [
+        { "edition": "76", "pageNum": "8" },
+        { "edition": "75", "pageNum": "17" },
+        { "edition": "74", "pageNum": "7" },
+        { "edition": "73", "pageNum": "9" },
+        { "edition": "72", "pageNum": "8" }
+      ]
+    },
+    {
+      "fieldName": "6. 物理化学：熱化学・化学平衡",
+      "questions": [
+        { "edition": "76", "pageNum": "9" },
+        { "edition": "75", "pageNum": "18" },
+        { "edition": "75", "pageNum": "25" },
+        { "edition": "74", "pageNum": "15" },
+        { "edition": "73", "pageNum": "17" },
+        { "edition": "72", "pageNum": "15" },
+        { "edition": "72", "pageNum": "7" }
+      ]
+    },
+    {
+      "fieldName": "7. 物理化学：反応速度・酸化還元",
+      "questions": [
+        { "edition": "76", "pageNum": "11" },
+        { "edition": "76", "pageNum": "15" },
+        { "edition": "75", "pageNum": "11" },
+        { "edition": "75", "pageNum": "14" },
+        { "edition": "75", "pageNum": "16" },
+        { "edition": "74", "pageNum": "22" },
+        { "edition": "74", "pageNum": "24" },
+        { "edition": "73", "pageNum": "15" },
+        { "edition": "73", "pageNum": "20" },
+        { "edition": "72", "pageNum": "17" }
+      ]
+    },
+    {
+      "fieldName": "8. 物理化学：物質の状態（固体・気体）",
+      "questions": [
+        { "edition": "75", "pageNum": "9" },
+        { "edition": "74", "pageNum": "17" },
+        { "edition": "74", "pageNum": "18" },
+        { "edition": "74", "pageNum": "19" },
+        { "edition": "73", "pageNum": "19" },
+        { "edition": "73", "pageNum": "22" },
+        { "edition": "72", "pageNum": "19" },
+        { "edition": "72", "pageNum": "20" }
+      ]
+    },
+    {
+      "fieldName": "9. 無機化学",
+      "questions": [
+        { "edition": "76", "pageNum": "10" },
+        { "edition": "76", "pageNum": "20" },
+        { "edition": "75", "pageNum": "24" },
+        { "edition": "74", "pageNum": "8" },
+        { "edition": "73", "pageNum": "10" },
+        { "edition": "73", "pageNum": "11" },
+        { "edition": "73", "pageNum": "24" },
+        { "edition": "73", "pageNum": "25" },
+        { "edition": "72", "pageNum": "16" }
+      ]
+    },
+    {
+      "fieldName": "10. 有機化学：構造・異性体・命名法",
+      "questions": [
+        { "edition": "76", "pageNum": "11" },
+        { "edition": "76", "pageNum": "19" },
+        { "edition": "76", "pageNum": "23" },
+        { "edition": "75", "pageNum": "19" },
+        { "edition": "75", "pageNum": "23" },
+        { "edition": "74", "pageNum": "9" },
+        { "edition": "74", "pageNum": "24" },
+        { "edition": "73", "pageNum": "12" },
+        { "edition": "72", "pageNum": "22" }
+      ]
+    },
+    {
+      "fieldName": "11. 有機化学：性質・反応",
+      "questions": [
+        { "edition": "76", "pageNum": "12" },
+        { "edition": "76", "pageNum": "13" },
+        { "edition": "76", "pageNum": "23" },
+        { "edition": "75", "pageNum": "12" },
+        { "edition": "75", "pageNum": "13" },
+        { "edition": "74", "pageNum": "11" },
+        { "edition": "74", "pageNum": "12" },
+        { "edition": "74", "pageNum": "23" },
+        { "edition": "73", "pageNum": "13" },
+        { "edition": "73", "pageNum": "14" },
+        { "edition": "72", "pageNum": "12" },
+        { "edition": "72", "pageNum": "13" },
+        { "edition": "72", "pageNum": "14" }
+      ]
+    },
+    {
+      "fieldName": "12. 有機化学：高分子・生体関連物質",
+      "questions": [
+        { "edition": "75", "pageNum": "22" },
+        { "edition": "74", "pageNum": "25" },
+        { "edition": "72", "pageNum": "11" }
       ]
     }
   ],
