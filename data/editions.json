@@ -8,6 +8,15 @@
     { "value": "71", "displayText": "第71回(令和２年)" },
     { "value": "70", "displayText": "第70回(令和元年)" },
     { "value": "69", "displayText": "第69回(平成30年3月)" },
-    { "value": "68", "displayText": "第68回(平成30年12月)" }
+    { "value": "68", "displayText": "第68回(平成30年12月)" },
+    { "value": "67", "displayText": "第67回(平成29年)" },
+    { "value": "66", "displayText": "第66回(平成28年)" },
+    { "value": "65", "displayText": "第65回(平成27年)" },
+    { "value": "64", "displayText": "第64回(平成26年)" },
+    { "value": "63", "displayText": "第63回(平成25年)" },
+    { "value": "62", "displayText": "第62回(平成24年)" },
+    { "value": "61", "displayText": "第61回(平成23年)" },
+    { "value": "60", "displayText": "第60回(平成22年)" },
+    { "value": "59", "displayText": "第59回(平成21年)" }
   ]
 }
