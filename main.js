@@ -13,7 +13,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, finishExamBtn,
-    difficultyToggles, difficultyBadge, examTimerSpan,
+    difficultyBadge, understandingBadge, examTimerSpan,
     filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
@@ -332,6 +332,43 @@ function updateDifficultyDisplay(questionId) {
     }
 }
 
+function updateUnderstandingDisplay(questionId) {
+    if (!understandingBadge) return;
+
+    // 現在保存されている問題の理解度データを取得
+    const data = understandingMap[questionId];
+
+    if (data && data.understanding) {
+        let displayText = "";
+        let colorClass = "";
+        const level = parseInt(data.understanding);
+
+        // 理解度ごとに表示テキストとカラー用クラスを設定
+        if (level === 1) { displayText = "❌ 不可"; colorClass = "diff-hard"; }       // 赤
+        else if (level === 2) { displayText = "🔁 要復習"; colorClass = "diff-normal"; } // オレンジ
+        else if (level === 3) { displayText = "✅ 完璧！"; colorClass = "diff-easy"; }   // 緑
+
+        understandingBadge.textContent = `理解度: ${displayText}`;
+        understandingBadge.className = 'difficulty-badge';
+        understandingBadge.style.backgroundColor = ''; // インラインスタイルをリセット
+        understandingBadge.style.color = '';
+        understandingBadge.classList.add(colorClass);
+        understandingBadge.classList.remove('hidden');
+    } else {
+        // ログインはしているが、まだその問題を一度も解いていない（理解度未選択）場合
+        if (currentUser) {
+            understandingBadge.textContent = "理解度: 未設定";
+            understandingBadge.className = 'difficulty-badge';
+            understandingBadge.style.backgroundColor = '#999'; // グレー
+            understandingBadge.style.color = '#fff';
+            understandingBadge.classList.remove('hidden');
+        } else {
+            // 未ログイン（ゲスト）の場合は非表示
+            understandingBadge.classList.add('hidden');
+        }
+    }
+}
+
 function updateNavButtons() {
     if (!prevBtn || !nextBtn || !jumpToSelect) return;
     prevBtn.disabled = (currentFieldIndex <= 0);
@@ -404,7 +441,8 @@ async function renderPageInternal(pdfPageNum) {
             if(resultAreaWeak) resultAreaWeak.textContent = '';
 
             updateNavButtons();
-            updateDifficultyDisplay(currentQuestionId);
+           updateDifficultyDisplay(currentQuestionId);
+            updateUnderstandingDisplay(currentQuestionId);
 
             const history = answerHistory[currentQuestionId];
             if (isExamMode && !history) {
@@ -1099,6 +1137,7 @@ async function initialize() {
     shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb');
     shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb');
     difficultyBadge = document.getElementById('difficulty-badge');
+    understandingBadge = document.getElementById('understanding-badge');
     examTimerSpan = document.getElementById('exam-timer');
 
     questionSource = document.getElementById('question-source');
