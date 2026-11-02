@@ -3,592 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計量士試験 過去問学習アプリ</title>
-    <!-- Google Font & Tailwind CSS (プロトタイプ用) -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>計量士国家試験 演習ブラウザ</title>
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
     <style>
-        :root {
-            --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --border-color: #e2e8f0;
-        }
-
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            font-size: 0.875rem;
-            cursor: pointer;
-            border: none;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
+        .explanation-btn {
+            background-color: #28a745;
             color: white;
+            margin-left: 10px;
         }
+        .explanation-btn:hover { background-color: #218838; }
 
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-        }
-
-        .btn-outline:hover {
-            background-color: #f1f5f9;
-        }
-
-        main {
-            flex: 1;
-            max-width: 1000px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 1.5rem;
-            box-sizing: border-box;
-            padding-bottom: 80px; /* ナビバー用 */
-        }
-
-        .mode-selector {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .mode-tab {
-            flex: 1;
-            padding: 1rem;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            text-align: center;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .mode-tab.active {
-            border-color: var(--primary-color);
-            background-color: #eff6ff;
-            color: var(--primary-color);
-        }
-
-        .control-panel {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.375rem;
-        }
-
-        label {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-sub);
-        }
-
-        select {
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            background-color: white;
-            font-family: inherit;
-        }
-
-        .toggle-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
-        .toggle-group label {
-            cursor: pointer;
-        }
-
-        .question-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-        }
-
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .question-meta {
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        .difficulty-badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-weight: 700;
-        }
-
-        .diff-easy { background-color: #dcfce7; color: #15803d; }
-        .diff-normal { background-color: #fef9c3; color: #a16207; }
-        .diff-hard { background-color: #fee2e2; color: #b91c1c; }
-
-        .question-body {
-            font-size: 1.1rem;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-            white-space: pre-wrap;
-        }
-
-        .choices-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .choice-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .choice-item:hover {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-        }
-
-        .choice-item.selected {
-            background-color: #eff6ff;
-            border-color: var(--primary-color);
-        }
-
-        .choice-item.correct {
-            background-color: #dcfce7;
-            border-color: #22c55e;
-        }
-
-        .choice-item.wrong {
-            background-color: #fee2e2;
-            border-color: #ef4444;
-        }
-
-        .choice-num {
-            font-weight: 700;
-            width: 1.5rem;
-            height: 1.5rem;
-            background-color: #f1f5f9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            flex-shrink: 0;
-        }
-
-        .choice-item.selected .choice-num {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .choice-text {
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-
-        .feedback-panel {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .feedback-title {
-            font-weight: 700;
-            color: #166534;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .feedback-title.wrong {
-            color: #991b1b;
-        }
-
-        .explanation {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #334155;
-        }
-
-        /* ログイン用オーバーレイ */
         .modal {
+            display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             z-index: 1000;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
         }
-
         .modal-content {
-            background-color: white;
-            border-radius: 0.75rem;
-            padding: 2rem;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            position: relative;
         }
-
-        .modal-header {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.25rem;
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            color: var(--text-sub);
         }
+        .close-modal:hover, .close-modal:focus { color: black; text-decoration: none; cursor: pointer; }
 
-        .form-input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            box-sizing: border-box;
-            margin-bottom: 1rem;
-        }
-
-        /* 画面下部ナビゲーションバー */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: var(--card-bg);
-            border-top: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
-            z-index: 100;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* 理解度用追加レイアウト */
-        .understanding-panel {
-            background-color: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .under-options {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .under-btn {
-            padding: 0.35rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            transition: all 0.15s;
-        }
-
-        .under-btn:hover {
-            background-color: #f1f5f9;
-        }
-
-        /* 個別理解度ステータスごとのアクティブスタイル */
-        .under-btn.active-1 { background-color: #fee2e2; border-color: #ef4444; color: #b91c1c; }
-        .under-btn.active-2 { background-color: #fef9c3; border-color: #eab308; color: #a16207; }
-        .under-btn.active-3 { background-color: #dcfce7; border-color: #22c55e; color: #15803d; }
-
-        .meta-badges {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+        #explanation-body { line-height: 1.6; margin-top: 10px; font-size: 16px; }
+        #explanation-body h3 { border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        #explanation-body code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+        #explanation-body blockquote { border-left: 4px solid #ccc; margin: 0; padding-left: 10px; color: #555; }
     </style>
 </head>
 <body>
+    <h1>計量士国家試験 演習ブラウザ</h1>
 
-    <!-- ヘッダー -->
-    <header>
-        <div class="logo">
-            <i class="fa-solid fa-scale-balanced"></i>
-            <span>計量士試験学習Web v2</span>
-        </div>
-        <div class="user-menu">
-            <span id="user-display" class="hidden" style="font-size: 0.875rem; font-weight: 500;"></span>
-            <button id="auth-btn" class="btn btn-outline">ログイン</button>
-        </div>
-    </header>
+    <!-- ログインオーバーレイ -->
+    <div id="login-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:40px;border-radius:12px;width:320px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+        <h2 style="margin-bottom:24px;color:#2c3e50;">計量士国家試験<br>演習ブラウザ</h2>
+        <input id="login-userid" type="text" placeholder="ユーザーID" style="width:100%;padding:10px;margin-bottom:12px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
+        <input id="login-password" type="password" placeholder="パスワード" style="width:100%;padding:10px;margin-bottom:16px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;font-size:14px;">
+        <div id="login-error" style="color:red;font-size:13px;margin-bottom:12px;display:none;"></div>
+        <button id="login-btn" style="width:100%;padding:12px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:15px;cursor:pointer;margin-bottom:12px;">ログイン</button>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+        <button id="guest-btn" style="width:100%;padding:10px;background:#95a5a6;color:#fff;border:none;border-radius:6px;font-size:14px;cursor:pointer;">ゲストとして演習を始める</button>
+      </div>
+    </div>
 
-    <!-- メインコンテンツ -->
-    <main>
-        <!-- モード切り替え -->
-        <div class="mode-selector">
-            <div id="tab-edition" class="mode-tab active" onclick="switchMode('edition')">年度別演習</div>
-            <div id="tab-field" class="mode-tab" onclick="switchMode('field')">分野別演習</div>
+    <!-- 理解度パネル -->
+    <div id="understanding-panel" style="display:none;position:fixed;bottom:0;left:0;width:100%;background:#fff;border-top:3px solid #2980b9;padding:16px;text-align:center;z-index:1000;box-shadow:0 -4px 12px rgba(0,0,0,0.15);">
+      <p style="margin:0 0 12px;font-size:15px;font-weight:bold;color:#2c3e50;">この問題の理解度を教えてください</p>
+      <div style="display:flex;justify-content:center;gap:12px;">
+        <button class="understanding-btn" data-level="1" style="padding:10px 20px;font-size:14px;border:2px solid #e74c3c;background:#fff;color:#e74c3c;border-radius:8px;cursor:pointer;">❌ 不可</button>
+        <button class="understanding-btn" data-level="2" style="padding:10px 20px;font-size:14px;border:2px solid #f39c12;background:#fff;color:#f39c12;border-radius:8px;cursor:pointer;">🔁 要復習</button>
+        <button class="understanding-btn" data-level="3" style="padding:10px 20px;font-size:14px;border:2px solid #27ae60;background:#fff;color:#27ae60;border-radius:8px;cursor:pointer;">✅ 完璧！</button>
+      </div>
+    </div>
+
+    <div id="exercise-view">
+
+        <div class="mode-tabs">
+            <button id="tab-by-edition" class="tab-btn active">年度別演習</button>
+            <button id="tab-by-field" class="tab-btn">分野別演習</button>
+            <button id="tab-shuffle" class="tab-btn">シャッフル演習</button>
+            <button id="tab-weak" class="tab-btn" style="opacity:0.5;" title="ログインが必要です">😵 苦手問題</button>
         </div>
 
-        <!-- コントロールパネル（年度別） -->
+        <!-- 年度別演習パネル -->
         <div id="panel-by-edition" class="control-panel">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="select-edition-year">実施年度</label>
-                    <select id="select-edition-year">
-                        <option value="all">全年度</option>
-                        <option value="R05">令和5年 (2023)</option>
-                        <option value="R04">令和4年 (2022)</option>
-                        <option value="R03">令和3年 (2021)</option>
+            <div class="top-row">
+                <div class="select-group">
+                    <label for="edition-select">実施回:</label>
+                    <select id="edition-select"></select>
+                </div>
+                <div class="select-group">
+                    <label for="subject-select-edition">科目:</label>
+                    <select id="subject-select-edition">
+                        <option value="houki">法規</option>
+                        <option value="kanri">管理</option>
+                        <option value="ichiki">一基</option>
+                        <option value="keishitsu">計質</option>
+                        <option value="kanka">環化</option>
+                        <option value="kanbutsu">環物</option>
+                        <option value="kannou">環濃</option>
+                        <option value="kanon">環音</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="select-edition-subject">試験科目</label>
-                    <select id="select-edition-subject">
-                        <option value="環化">環境計量計量管理 (環化)</option>
-                        <option value="環濃">環境測定分析一般 (環濃)</option>
-                    </select>
+                <div class="filter-group">
+                    <span class="filter-label">難易度:</span>
+                    <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
+                    <label><input type="checkbox" value="B" checked class="diff-filter-cb">B(普)</label>
+                    <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
+                    <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
                 </div>
+                <button id="go-btn-edition">表示</button>
                 <div class="toggle-group">
                     <label for="toggle-diff-edition">難易度を表示</label>
                     <input type="checkbox" id="toggle-diff-edition" class="difficulty-toggle-checkbox" checked>
                 </div>
-                <!-- ⬇ 理解度トグルを追加 ⬇ -->
-                <div class="toggle-group" style="margin-left: 10px;">
-                    <label for="toggle-under-edition">理解度を表示</label>
-                    <input type="checkbox" id="toggle-under-edition" class="understanding-toggle-checkbox" checked>
+            </div>
+            <div class="actions-row">
+                <div class="answer-group">
+                    <span class="answer-label">解答:</span>
+                    <div class="answer-buttons">
+                        <button class="answer-btn" data-choice="1">1</button>
+                        <button class="answer-btn" data-choice="2">2</button>
+                        <button class="answer-btn" data-choice="3">3</button>
+                        <button class="answer-btn" data-choice="4">4</button>
+                        <button class="answer-btn" data-choice="5">5</button>
+                    </div>
                 </div>
+                <div id="score-counter-edition" class="score-counter">
+                    正答数: <span class="score-correct">0</span>
+                </div>
+                <button id="show-results-btn-edition" class="results-btn">成績を見る</button>
+                <button id="btn-explanation-edition" class="explanation-btn hidden">解説を見る</button>
+                <div id="result-area-edition" class="result-area"></div>
             </div>
         </div>
 
-        <!-- コントロールパネル（分野別） -->
+        <!-- 分野別演習パネル -->
         <div id="panel-by-field" class="control-panel hidden">
-            <div class="form-row">
-                <div class="form-group" style="flex: 2;">
-                    <label for="select-field-sub">出題分野</label>
-                    <select id="select-field-sub">
-                        <option value="all">全分野</option>
-                        <!-- 環化 -->
-                        <option value="環化_基本法令">【環化】基本法令・制度</option>
-                        <option value="環化_測定技術">【環化】分析機器・測定技術</option>
-                        <option value="環化_計算">【環化】濃度計算・希釈・誤差</option>
-                        <option value="環化_化学平衡">【環化】化学平衡・反応・溶媒抽出</option>
-                        <!-- 環濃 -->
-                        <option value="環濃_JIS">【環濃】JIS通則・基本操作</option>
-                        <option value="環濃_GC">【環濃】ガスクロマトグラフィー (GC)</option>
-                        <option value="環濃_LC">【環濃】高速液体クロマトグラフィー (LC)</option>
-                        <option value="環濃_AAS">【環濃】原子吸光・ICP発光・吸光光度</option>
-                    </select>
+            <div class="top-row">
+                 <div class="select-group">
+                     <label for="subject-select-field">科目:</label>
+                     <select id="subject-select-field">
+                         <option value="kanka">環化</option>
+                         <option value="kanbutsu">環物</option>
+                         <option value="kannou">環濃</option>
+                         <option value="kanon">環音</option>
+                         <option value="houki">法規</option>
+                         <option value="kanri">管理</option>
+                         <option value="ichiki">一基</option>
+                         <option value="keishitsu">計質</option>
+                     </select>
+                 </div>
+                 <div class="select-group">
+                     <label>分野: </label>
+                     <div id="field-select-custom" class="custom-select">
+                         <div class="select-selected">分野を選択...</div>
+                         <div class="select-items select-hide"></div>
+                     </div>
+                 </div>
+
+                 <div class="filter-group">
+                    <span class="filter-label">難易度:</span>
+                    <label><input type="checkbox" value="A" checked class="diff-filter-cb">A(易)</label>
+                    <label><input type="checkbox" value="B" checked class="diff-filter-cb">B(普)</label>
+                    <label><input type="checkbox" value="C" checked class="diff-filter-cb">C(難)</label>
+                    <label><input type="checkbox" value="none" checked class="diff-filter-cb">指定なし</label>
                 </div>
+
+                <button id="go-btn-field">表示</button>
+
                 <div class="toggle-group">
                     <label for="toggle-diff-field">難易度を表示</label>
                     <input type="checkbox" id="toggle-diff-field" class="difficulty-toggle-checkbox" checked>
                 </div>
-                <!-- ⬇ 理解度トグルを追加 ⬇ -->
-                <div class="toggle-group" style="margin-left: 10px;">
-                    <label for="toggle-under-field">理解度を表示</label>
-                    <input type="checkbox" id="toggle-under-field" class="understanding-toggle-checkbox" checked>
+             </div>
+            <div class="actions-row">
+                <div class="answer-group">
+                   <span class="answer-label">解答:</span>
+                   <div class="answer-buttons">
+                       <button class="answer-btn" data-choice="1">1</button>
+                       <button class="answer-btn" data-choice="2">2</button>
+                       <button class="answer-btn" data-choice="3">3</button>
+                       <button class="answer-btn" data-choice="4">4</button>
+                       <button class="answer-btn" data-choice="5">5</button>
+                   </div>
                 </div>
+                <div id="score-counter-field" class="score-counter">
+                    正答数: <span class="score-correct">0</span>
+                </div>
+                <button id="show-results-btn-field" class="results-btn">成績を見る</button>
+                <button id="btn-explanation-field" class="explanation-btn hidden">解説を見る</button>
+                <div id="result-area-field" class="result-area"></div>
             </div>
         </div>
 
-        <!-- 問題表示エリア -->
-        <div id="question-area">
-            <!-- 読込中表示用 -->
-            <div id="loading-spinner" class="hidden" style="text-align: center; padding: 3rem;">
-                <i class="fa-solid fa-spinner fa-spin fa-2xl" style="color: var(--primary-color);"></i>
-                <p style="margin-top: 1rem; color: var(--text-sub);">問題を読み込んでいます...</p>
+        <!-- シャッフル演習パネル -->
+        <div id="panel-shuffle" class="control-panel hidden">
+            <div class="top-row">
+                <div class="subject-checkbox-container">
+                    <span class="filter-label">出題科目:</span>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" value="houki" class="shuffle-subject-cb">法規</label>
+                        <label><input type="checkbox" value="kanri" class="shuffle-subject-cb">管理</label>
+                        <label><input type="checkbox" value="ichiki" class="shuffle-subject-cb">一基</label>
+                        <label><input type="checkbox" value="keishitsu" class="shuffle-subject-cb">計質</label>
+                        <label><input type="checkbox" value="kanka" class="shuffle-subject-cb">環化</label>
+                        <label><input type="checkbox" value="kanbutsu" class="shuffle-subject-cb">環物</label>
+                        <label><input type="checkbox" value="kannou" class="shuffle-subject-cb">環濃</label>
+                        <label><input type="checkbox" value="kanon" class="shuffle-subject-cb">環音</label>
+                    </div>
+                </div>
+
+                 <div class="filter-group">
+                    <span class="filter-label">難易度:</span>
+                    <label><input type="checkbox" value="A" class="shuffle-diff-cb">A(易)</label>
+                    <label><input type="checkbox" value="B" class="shuffle-diff-cb">B(普)</label>
+                    <label><input type="checkbox" value="C" class="shuffle-diff-cb">C(難)</label>
+                    <label><input type="checkbox" value="none" checked class="shuffle-diff-cb">指定なし</label>
+                </div>
+
+                <button id="go-btn-shuffle" class="exam-start-btn">演習開始 (5問)</button>
             </div>
-
-            <!-- カード -->
-            <div id="question-card-container" class="question-card hidden">
-                <div class="question-header">
-                    <div class="question-meta" id="question-meta-text">令和5年 環化 問1</div>
-                    <div class="meta-badges">
-                        <span id="difficulty-badge" class="difficulty-badge hidden"></span>
-                        <span id="understanding-badge" class="difficulty-badge hidden"></span>
-                    </div>
+            
+            <div class="actions-row">
+                <div class="answer-group">
+                   <span class="answer-label">解答:</span>
+                   <div class="answer-buttons">
+                       <button class="answer-btn" data-choice="1">1</button>
+                       <button class="answer-btn" data-choice="2">2</button>
+                       <button class="answer-btn" data-choice="3">3</button>
+                       <button class="answer-btn" data-choice="4">4</button>
+                       <button class="answer-btn" data-choice="5">5</button>
+                   </div>
                 </div>
-
-                <!-- 理解度登録パネル (ログイン時のみ表示) -->
-                <div id="understanding-panel" class="understanding-panel hidden">
-                    <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-sub);">
-                        <i class="fa-solid fa-circle-check" style="color: var(--primary-color);"></i> この問題の理解度：
-                    </span>
-                    <div class="under-options">
-                        <button class="under-btn" data-level="1" onclick="selectUnderstanding(1)">❌ 不可</button>
-                        <button class="under-btn" data-level="2" onclick="selectUnderstanding(2)">🔁 要復習</button>
-                        <button class="under-btn" data-level="3" onclick="selectUnderstanding(3)">✅ 完璧！</button>
-                    </div>
+               
+                <div id="score-counter-shuffle" class="score-counter">
+                    正答数: <span class="score-correct">0</span>
                 </div>
-
-                <div class="question-body" id="question-body-text">
-                    問題文がここに入ります。
-                </div>
-
-                <div class="choices-container" id="choices-box">
-                    <!-- 選択肢がJSから自動生成される -->
-                </div>
-
-                <!-- 解説表示（判定後に表示） -->
-                <div id="feedback-box" class="feedback-panel hidden">
-                    <div class="feedback-title" id="feedback-status">
-                        <i class="fa-solid fa-circle-check"></i> <span>正解！</span>
-                    </div>
-                    <div class="explanation" id="explanation-text">
-                        解説文がここに入ります。
-                    </div>
-                </div>
-
-                <!-- アクションボタン -->
-                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button id="submit-btn" class="btn btn-primary" onclick="checkAnswer()">回答する</button>
-                    <button id="next-action-btn" class="btn btn-outline hidden" onclick="goNext()">次の問題へ</button>
-                </div>
-            </div>
-
-            <!-- 空状態の表示 -->
-            <div id="empty-state" class="hidden" style="text-align: center; padding: 4rem 1.5rem; background-color: white; border-radius: 0.75rem; border: 1px solid var(--border-color);">
-                <i class="fa-solid fa-magnifying-glass fa-2xl" style="color: var(--text-sub); margin-bottom: 1.5rem; display: block;"></i>
-                <h3 style="margin-bottom: 0.5rem; font-weight: 700;">条件に一致する問題がありません</h3>
-                <p style="color: var(--text-sub); font-size: 0.875rem;">年度や科目のフィルター条件を変更してみてください。</p>
+               
+                <button id="finish-exam-btn" class="results-btn hidden">試験終了</button>
+                <button id="show-results-btn-shuffle" class="results-btn hidden">成績を見る</button>
+                <button id="btn-explanation-shuffle" class="explanation-btn hidden">解説を見る</button>
+                
+                <div id="result-area-shuffle" class="result-area"></div>
             </div>
         </div>
-    </main>
 
-    <!-- 下部ナビゲーションバー -->
-    <div class="nav-bar">
-        <div style="font-size: 0.875rem; font-weight: 500;" id="progress-text">
-            問題 0 / 0
+        <!-- 苦手問題パネル（他パネルと同列・exercise-view 内に正しく配置） -->
+<div id="panel-weak" class="control-panel hidden">
+    <!-- 設定行 -->
+    <div class="top-row">
+        <div>
+            <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
+            <label><input type="checkbox" class="weak-level-cb" value="1" checked> ❌ 不可</label>
+            <label style="margin-left:12px;"><input type="checkbox" class="weak-level-cb" value="2" checked> 🔁 要復習</label>
+            <label style="margin-left:12px;"><input type="checkbox" class="weak-level-cb" value="3"> ✅ 完璧！</label>
         </div>
-        <div class="nav-buttons">
-            <button id="prev-btn" class="btn btn-outline" onclick="goPrev()"><i class="fa-solid fa-chevron-left"></i> 前へ</button>
-            <button id="next-btn" class="btn btn-outline" onclick="goNext()">次へ <i class="fa-solid fa-chevron-right"></i></button>
+        <div style="margin-top:8px;">
+            <span style="font-weight:bold;">難易度：</span>
+            <label><input type="checkbox" class="weak-diff-cb" value="A" checked> A(易)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="B" checked> B(普)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="C" checked> C(難)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="none" checked> 指定なし</label>
         </div>
+                <div style="margin-top:8px;">
+                    <label style="font-weight:bold;">科目フィルター：</label>
+                    <select id="weak-subject-filter">
+                        <option value="all">全科目</option>
+                        <option value="houki">法規</option>
+                        <option value="kanri">管理</option>
+                        <option value="ichiki">一基</option>
+                        <option value="keishitsu">計質</option>
+                        <option value="kanka">環化</option>
+                        <option value="kanbutsu">環物</option>
+                        <option value="kannou">環濃</option>
+                        <option value="kanon">環音</option>
+                    </select>
+                </div>
+                <p id="weak-count" style="margin:8px 0 0;font-weight:bold;color:#555;">対象問題数：ログインして確認</p>
+                <button id="go-btn-weak" style="margin-top:8px;padding:0.5em 1.2em;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1em;">演習開始</button>
+
+            </div>
+            <!-- 解答行（年度別演習と同じ actions-row 構造） -->
+            <div id="weak-answer-area" class="actions-row" style="display:none;">
+                <div class="answer-group">
+                    <span class="answer-label">解答:</span>
+                    <div class="answer-buttons">
+                        <button class="answer-btn" data-choice="1">1</button>
+                        <button class="answer-btn" data-choice="2">2</button>
+                        <button class="answer-btn" data-choice="3">3</button>
+                        <button class="answer-btn" data-choice="4">4</button>
+                        <button class="answer-btn" data-choice="5">5</button>
+                    </div>
+                </div>
+                <div id="result-area-weak" class="result-area"></div>
+                <button id="btn-explanation-weak" class="explanation-btn hidden">解説を見る</button>
+                <div class="score-counter">正答数: <span id="score-correct-weak" class="score-correct">0</span></div>
+                <button id="show-results-btn-weak" class="results-btn">成績を見る</button>
+            </div>
+        </div>
+
+        <!-- ナビゲーション -->
+        <div class="navigation">
+            <button id="prev-btn">◀ 前の問題</button>
+            <span id="page-indicator">問 <span id="page-num">?</span> / <span id="page-count">?</span></span>
+            <span id="difficulty-badge" class="difficulty-badge hidden"></span>
+            <span id="understanding-badge" class="difficulty-badge hidden"></span>
+            <span id="exam-timer" class="exam-timer hidden">00:00</span>
+            <button id="next-btn">次の問題 ▶</button>
+            <select id="jump-to-select" class="jump-select">
+                <option value="">ジャンプ...</option>
+            </select>
+            <span id="question-source" class="source-info"></span>
+        </div>
+
+        <div class="viewer-container">
+            <div id="welcome-overlay">
+                <h2>過去問演習へようこそ！</h2>
+                <p>学習したいモードを選択して「表示」ボタンを押してください。</p>
+            </div>
+            <div id="loading-spinner" class="spinner-overlay hidden">
+                <div class="spinner"></div>
+                <p>読み込み中...</p>
+            </div>
+            <canvas id="pdf-canvas"></canvas>
+        </div>
+
     </div>
 
-    <!-- 認証モーダル -->
-    <div id="auth-modal" class="modal hidden">
+    <div id="results-panel" class="hidden">
+        <h2>成績一覧</h2>
+        
+        <div id="certificate-container" class="certificate hidden">
+            <div class="cert-header">成績証明書</div>
+            <div class="cert-body">
+                <p>あなたは計量士国家試験 演習ブラウザの模擬試験において<br>以下の成績を収めました。</p>
+                
+                <div class="cert-meta">
+                    <div class="cert-meta-row"><span class="cert-label">実施日:</span> <span id="cert-date"></span></div>
+                    <div class="cert-meta-row"><span class="cert-label">出題科目:</span> <span id="cert-subjects"></span></div>
+                    <div class="cert-meta-row"><span class="cert-label">難易度:</span> <span id="cert-difficulties"></span></div>
+                </div>
+
+                <div class="cert-score-area">
+                    <div class="cert-score-label">スコア</div>
+                    <div class="cert-score-value">
+                        <span id="cert-score-num">0</span> / 5 点
+                    </div>
+                </div>
+                <div class="cert-time-area">
+                     解答時間: <span id="cert-time-value">--:--</span>
+                </div>
+                
+                <div class="cert-details">
+                    <table id="cert-details-table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>科目</th>
+                                <th>年度</th>
+                                <th>問</th>
+                                <th>結果</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="cert-footer">計量士委員会</div>
+        </div>
+
+        <div id="cert-image-container" class="hidden" style="text-align:center; margin-bottom:30px;"></div>
+
+        <div id="results-summary"></div>
+        <div id="results-list"></div>
+        <button id="back-to-exercise-btn">演習に戻る</button>
+    </div>
+
+    <div id="explanation-modal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <span id="modal-title">ログイン</span>
-                <button class="modal-close" onclick="closeAuthModal()"><i class="fa-solid fa-xmark"></i></button>
+            <span class="close-modal">&times;</span>
+            <h2 id="explanation-title">解説</h2>
+            <div id="explanation-body">
             </div>
-            <div style="margin-bottom: 1rem; font-size: 0.875rem; color: var(--text-sub);">
-                ※デモ用のログインです。任意の「ユーザー名」を入力してログインしてください。
-            </div>
-            <input type="text" id="username-input" class="form-input" placeholder="ユーザー名を入力">
-            <button class="btn btn-primary" style="width: 100%;" onclick="performLogin()">ログイン</button>
         </div>
     </div>
 
-    <script src="main.js"></script>
+    <script src="main.js" type="module"></script>
 </body>
 </html>
