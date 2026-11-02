@@ -1295,8 +1295,11 @@ function setupWeakUI() {
   });
 
   if (weakSubjectFilter) weakSubjectFilter.addEventListener('change', updateWeakCount);
-  document.querySelectorAll('input[name="weak-level"]').forEach(r => {
-    r.addEventListener('change', updateWeakCount);
+  document.querySelectorAll('.weak-level-cb').forEach(cb => {
+    cb.addEventListener('change', updateWeakCount);
+  });
+  document.querySelectorAll('.weak-diff-cb').forEach(cb => {
+    cb.addEventListener('change', updateWeakCount);
   });
 
   if (goBtnWeak) goBtnWeak.addEventListener('click', async () => {
@@ -1324,18 +1327,23 @@ function setupWeakUI() {
 }
 
 function getWeakQuestions() {
-  const levelVal = document.querySelector('input[name="weak-level"]:checked')?.value || '12';
+  const selectedLevels = Array.from(document.querySelectorAll('.weak-level-cb:checked')).map(cb => parseInt(cb.value));
+  const selectedDiffs = Array.from(document.querySelectorAll('.weak-diff-cb:checked')).map(cb => cb.value);
   const subjectFilter = document.getElementById('weak-subject-filter')?.value || 'all';
-  const targetLevels = levelVal === '12' ? [1, 2] : [parseInt(levelVal)];
 
   return Object.entries(understandingMap)
     .filter(([id, data]) => {
-      if (!targetLevels.includes(data.understanding)) return false;
+      if (!selectedLevels.includes(data.understanding)) return false;
       if (subjectFilter !== 'all') {
         const parts = id.split('-');
-        return parts[1] === subjectFilter;
+        if (parts[1] !== subjectFilter) return false;
       }
-      return true;
+      // 難易度フィルターのチェック
+      const difficulty = difficultyMap[id];
+      if (!difficulty) {
+        return selectedDiffs.includes('none');
+      }
+      return selectedDiffs.includes(difficulty);
     })
     .map(([id]) => {
       const parts = id.split('-');
