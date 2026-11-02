@@ -13,7 +13,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, finishExamBtn,
-    difficultyToggles, difficultyBadge, understandingBadge, examTimerSpan,
+    difficultyToggles, difficultyBadge, understandingBadge, examTimerSpan, // ← 確実に追加されました！
     filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
