@@ -13,7 +13,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, finishExamBtn,
-    difficultyToggles, difficultyBadge, understandingBadge, examTimerSpan, // ← 確実に追加されました！
+    difficultyToggles, understandingToggles, difficultyBadge, understandingBadge, examTimerSpan,
     filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
@@ -334,6 +334,12 @@ function updateDifficultyDisplay(questionId) {
 
 function updateUnderstandingDisplay(questionId) {
     if (!understandingBadge) return;
+
+    const isVisible = understandingToggles && understandingToggles.length > 0 && understandingToggles[0].checked;
+    if (!isVisible) {
+        understandingBadge.classList.add('hidden');
+        return;
+    }
 
     // 現在保存されている問題の理解度データを取得
     const data = understandingMap[questionId];
@@ -1006,6 +1012,17 @@ function setupEventListeners() {
         });
     }
 
+    if (understandingToggles && understandingToggles.length > 0) {
+        understandingToggles.forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const isChecked = e.target.checked;
+                understandingToggles.forEach(t => t.checked = isChecked);
+                const currentQId = getCurrentQuestionId();
+                updateUnderstandingDisplay(currentQId);
+            });
+        });
+    }
+
     if (filterCheckboxes.length > 0) {
         filterCheckboxes.forEach(cb => {
             cb.addEventListener('change', (e) => {
@@ -1133,6 +1150,7 @@ async function initialize() {
     finishExamBtn = document.getElementById('finish-exam-btn');
 
     difficultyToggles = document.querySelectorAll('.difficulty-toggle-checkbox');
+    understandingToggles = document.querySelectorAll('.understanding-toggle-checkbox');
     filterCheckboxes = document.querySelectorAll('.diff-filter-cb');
     shuffleSubjectCheckboxes = document.querySelectorAll('.shuffle-subject-cb');
     shuffleDiffCheckboxes = document.querySelectorAll('.shuffle-diff-cb');
