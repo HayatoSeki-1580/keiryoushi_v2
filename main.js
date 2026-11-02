@@ -1,6 +1,6 @@
 /**
  * 計量士試験学習Web v2
- * クライアントサイドメインロジック (難易度・理解度チェックボックス連動修正版)
+ * クライアントサイドメインロジック
  */
 
 // --- 状態管理用グローバル変数 ---
@@ -94,7 +94,7 @@ function fetchQuestions() {
                     "「計量」とは、計量器を用いて、物象の状態の量を測定することをいう。",
                     "物象の状態の量には、取引又は証明における計量に関するものが含まれる。",
                     "長さ、質量、時間、電流、温度、物質量、光度は、いずれも法で定める物象の状態の量である。",
-                    "取引又は証明における計量以外の計量は、法の規制の対象外である。",
+                    "取引又は証明における計量以外の計量は、法の規制 of 対象外である。",
                     "「計量器」とは、計量をするための器具、機械又は装置をいう。"
                 ],
                 correctAnswer: 3,
@@ -320,7 +320,7 @@ function updateDifficultyDisplay(questionId) {
 function updateUnderstandingDisplay(questionId) {
     if (!understandingBadge) return;
 
-    // ⬇ 「理解度を表示」チェックボックスがオンか確認。オフなら非表示にして終了 ⬇
+    // ⬇ 「理解度を表示」トグルのチェックが入っているか確認 ⬇
     const isVisible = understandingToggles.length > 0 && understandingToggles[0].checked;
     if (!isVisible) {
         understandingBadge.classList.add('hidden');
