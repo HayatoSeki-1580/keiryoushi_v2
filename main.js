@@ -13,7 +13,7 @@ let exerciseView, resultsPanel, welcomeOverlay, canvas, loadingSpinner,
     customSelect, selectSelected, selectItems,
     goBtnField, resultAreaField, scoreCorrectField, showResultsBtnField,
     goBtnShuffle, resultAreaShuffle, scoreCorrectShuffle, showResultsBtnShuffle, finishExamBtn,
-    difficultyBadge, understandingBadge, examTimerSpan,
+    difficultyToggles, difficultyBadge, understandingBadge, examTimerSpan,
     filterCheckboxes, shuffleSubjectCheckboxes, shuffleDiffCheckboxes,
     answerButtonsNodeList,
     questionSource, resultsSummary, resultsList, backToExerciseBtn,
@@ -1169,22 +1169,6 @@ async function initialize() {
     await setupEditionSelector();
     await loadFieldsData();
     await loadDifficultyData();
-
-    try {
-        await setupEditionSelector();
-    } catch (e) {
-        console.error("setupEditionSelector failed:", e);
-    }
-    try {
-        await loadFieldsData();
-    } catch (e) {
-        console.error("loadFieldsData failed:", e);
-    }
-    try {
-        await loadDifficultyData();
-    } catch (e) {
-        console.error("loadDifficultyData failed:", e);
-    }
     
     setupLoginUI();
     setupWeakUI();
