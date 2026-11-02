@@ -1170,6 +1170,22 @@ async function initialize() {
     await loadFieldsData();
     await loadDifficultyData();
 
+    try {
+        await setupEditionSelector();
+    } catch (e) {
+        console.error("setupEditionSelector failed:", e);
+    }
+    try {
+        await loadFieldsData();
+    } catch (e) {
+        console.error("loadFieldsData failed:", e);
+    }
+    try {
+        await loadDifficultyData();
+    } catch (e) {
+        console.error("loadDifficultyData failed:", e);
+    }
+    
     setupLoginUI();
     setupWeakUI();
     setupEventListeners();
