@@ -255,15 +255,22 @@
         </div>
 
         <!-- 苦手問題パネル（他パネルと同列・exercise-view 内に正しく配置） -->
-        <div id="panel-weak" class="control-panel hidden">
-            <!-- 設定行 -->
-            <div class="top-row">
-                <div>
-                    <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
-                    <label><input type="radio" name="weak-level" value="1"> ❌ 不可のみ</label>
-                    <label style="margin-left:12px;"><input type="radio" name="weak-level" value="2"> 🔁 要復習のみ</label>
-                    <label style="margin-left:12px;"><input type="radio" name="weak-level" value="12" checked> ❌+🔁 両方（おすすめ）</label>
-                </div>
+<div id="panel-weak" class="control-panel hidden">
+    <!-- 設定行 -->
+    <div class="top-row">
+        <div>
+            <p style="margin:0 0 6px;font-weight:bold;">対象の理解度：</p>
+            <label><input type="checkbox" class="weak-level-cb" value="1" checked> ❌ 不可</label>
+            <label style="margin-left:12px;"><input type="checkbox" class="weak-level-cb" value="2" checked> 🔁 要復習</label>
+            <label style="margin-left:12px;"><input type="checkbox" class="weak-level-cb" value="3"> ✅ 完璧！</label>
+        </div>
+        <div style="margin-top:8px;">
+            <span style="font-weight:bold;">難易度：</span>
+            <label><input type="checkbox" class="weak-diff-cb" value="A" checked> A(易)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="B" checked> B(普)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="C" checked> C(難)</label>
+            <label style="margin-left:8px;"><input type="checkbox" class="weak-diff-cb" value="none" checked> 指定なし</label>
+        </div>
                 <div style="margin-top:8px;">
                     <label style="font-weight:bold;">科目フィルター：</label>
                     <select id="weak-subject-filter">
